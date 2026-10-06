@@ -1,41 +1,29 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>STNetwork · Work</title>
-  <link rel="stylesheet" href="../../style.css">
-  <style>
-    body{padding:20px}.work{max-width:1100px;margin:auto}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{padding:16px;border:1px solid #56645b;border-radius:12px;background:#35443a}.card button{margin-top:8px}.private{opacity:.8}
-  </style>
-</head>
-<body>
-<main class="work">
-<h1>STNetwork · Work</h1>
-<p class="private">Classic interface over the same eWorld employment domain.</p>
-<div class="toolbar">
-<button id="all">All jobs</button><button id="remote">Remote</button><button id="flexible">Flexible</button>
-<a href="../../index.html">Return to eWorld</a>
-</div>
-<section id="jobs" class="grid"></section>
-<h2>My resume</h2>
-<div class="card">
-<label>Name <input id="name" value="Guest"></label>
-<label>Headline <input id="headline" placeholder="What do you do?"></label>
-<label>Skills <input id="skills" placeholder="skill, skill, skill"></label>
-<button id="save">Save resume draft</button>
-<p id="resume-status"></p>
-</div>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>STNetwork · Work</title><link rel="stylesheet" href="../../style.css"><style>
+body{padding:20px}.work{max-width:1100px;margin:auto}.toolbar,.form{display:flex;gap:8px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{padding:16px;border:1px solid #56645b;border-radius:12px;background:#35443a}.card button{margin:6px 6px 0 0}.form label{display:grid;gap:4px;min-width:220px}.muted{opacity:.75}.tabs{display:flex;gap:8px;margin:12px 0}
+</style></head>
+<body><main class="work">
+<h1>STNetwork · Work</h1><p class="muted">Classic interface over the same social identity used by eWorld.</p>
+<div class="tabs"><button id="jobsTab">Jobs</button><button id="resumeTab">Resume</button><button id="appsTab">Applications</button><a href="../../index.html">eWorld</a></div>
+<section id="jobsView"><div class="toolbar"><input id="query" placeholder="Search jobs, skills, companies"><button id="all">All</button><button id="remote">Remote</button><button id="flexible">Flexible</button></div><section id="jobs" class="grid"></section></section>
+<section id="resumeView" hidden><h2>My resume</h2><div class="card form"><label>Name<input id="name"></label><label>Headline<input id="headline"></label><label>Skills<input id="skills" placeholder="skill, skill, skill"></label><label>Experience<textarea id="experience"></textarea></label><label>Education<textarea id="education"></textarea></label><label>Projects<textarea id="projects"></textarea></label></div><div class="toolbar"><button id="save">Save private draft</button><button id="publish">Publish resume</button></div><p id="resumeStatus"></p></section>
+<section id="appsView" hidden><h2>Applications</h2><section id="apps" class="grid"></section></section>
 </main>
 <script type="module">
-import {getJobs,createResumeDraft} from "../domain/work.js";
-let resume=createResumeDraft({name:"Guest"});
-const jobs=document.querySelector("#jobs");
-function render(filter){jobs.innerHTML="";for(const j of getJobs(filter?{mode:filter}:{})){const c=document.createElement("article");c.className="card";c.innerHTML="<h3>"+j.title+"</h3><p>"+j.company+" · "+j.mode+"</p><p>"+j.skills.join(" · ")+"</p><button>Open vacancy</button><button>Prepare application</button>";jobs.appendChild(c)}}
-document.querySelector("#all").onclick=()=>render();document.querySelector("#remote").onclick=()=>render("remote");document.querySelector("#flexible").onclick=()=>render("flexible");
-document.querySelector("#save").onclick=()=>{resume.profile.name=document.querySelector("#name").value;resume.profile.headline=document.querySelector("#headline").value;resume.profile.skills=document.querySelector("#skills").value.split(",").map(v=>v.trim()).filter(Boolean);resume.status="draft";document.querySelector("#resume-status").textContent="Resume draft saved locally in the current session.";localStorage.setItem("eworld.resume",JSON.stringify(resume))};
-const saved=localStorage.getItem("eworld.resume");if(saved)try{resume=JSON.parse(saved);document.querySelector("#name").value=resume.profile.name;document.querySelector("#headline").value=resume.profile.headline;document.querySelector("#skills").value=resume.profile.skills.join(", ")}catch{}
-render();
-</script>
-</body>
-</html>
+import {loadIdentity,saveIdentity} from "../domain/identity.js";
+import {getJobs,updateResume,applyToJob} from "../domain/employment.js";
+const identity=loadIdentity(),state=identity.employment,jobs=document.querySelector("#jobs"),apps=document.querySelector("#apps");
+const q=document.querySelector("#query");
+function renderJobs(filter){jobs.innerHTML="";for(const j of getJobs(state,{mode:filter,query:q.value})){const c=document.createElement("article");c.className="card";c.innerHTML="<h3>"+j.title+"</h3><p>"+j.company+" · "+j.mode+" · "+j.location+"</p><p>"+j.skills.join(" · ")+"</p><button data-id='"+j.id+"'>Open vacancy</button><button data-apply='"+j.id+"'>Apply</button>";jobs.appendChild(c)}}
+jobs.onclick=e=>{const id=e.target.dataset.apply;if(id){const app=applyToJob(state,id);saveIdentity(identity);renderApps();document.querySelector("#resumeStatus").textContent="Application "+app.id+" prepared as "+app.status+"."}};
+function renderApps(){apps.innerHTML="";for(const a of state.applications){const j=state.jobs.find(x=>x.id===a.jobId);const c=document.createElement("article");c.className="card";c.innerHTML="<h3>"+(j?.title||a.jobId)+"</h3><p>"+(j?.company||"")+" · "+a.status+"</p><p>"+a.createdAt+"</p>";apps.appendChild(c)}}
+function fillResume(){const r=state.resume;name.value=identity.displayName;headline.value=r.headline;skills.value=r.skills.join(", ");experience.value=r.experience.join("\n");education.value=r.education.join("\n");projects.value=r.projects.join("\n")}
+function collect(){return {headline:headline.value,skills:skills.value.split(",").map(v=>v.trim()).filter(Boolean),experience:experience.value.split("\n").map(v=>v.trim()).filter(Boolean),education:education.value.split("\n").map(v=>v.trim()).filter(Boolean),projects:projects.value.split("\n").map(v=>v.trim()).filter(Boolean)}}
+save.onclick=()=>{updateResume(state,collect());state.resume.visibility="private";saveIdentity(identity);resumeStatus.textContent="Private resume draft saved in the shared identity."};
+publish.onclick=()=>{updateResume(state,collect());state.resume.visibility="discoverable";saveIdentity(identity);resumeStatus.textContent="Resume marked discoverable. External publication is not performed."};
+q.oninput=()=>renderJobs();all.onclick=()=>renderJobs();remote.onclick=()=>renderJobs("remote");flexible.onclick=()=>renderJobs("flexible");
+jobsTab.onclick=()=>show("jobs");resumeTab.onclick=()=>show("resume");appsTab.onclick=()=>show("apps");
+function show(which){jobsView.hidden=which!=="jobs";resumeView.hidden=which!=="resume";appsView.hidden=which!=="apps";if(which==="resume")fillResume();if(which==="apps")renderApps()}
+renderJobs();renderApps();
+</script></body></html>
