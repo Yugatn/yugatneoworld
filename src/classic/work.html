@@ -12,12 +12,13 @@ body{padding:20px}.work{max-width:1100px;margin:auto}.toolbar,.form{display:flex
 </main>
 <script type="module">
 import {loadIdentity,saveIdentity} from "../domain/identity.js";
-import {getJobs,updateResume,applyToJob} from "../domain/employment.js";
+import {getJobs,updateResume,applyToJob,submitApplication} from "../domain/employment.js";
 const identity=loadIdentity(),state=identity.employment,jobs=document.querySelector("#jobs"),apps=document.querySelector("#apps");
 const q=document.querySelector("#query");
 function renderJobs(filter){jobs.innerHTML="";for(const j of getJobs(state,{mode:filter,query:q.value})){const c=document.createElement("article");c.className="card";c.innerHTML="<h3>"+j.title+"</h3><p>"+j.company+" · "+j.mode+" · "+j.location+"</p><p>"+j.skills.join(" · ")+"</p><button data-id='"+j.id+"'>Open vacancy</button><button data-apply='"+j.id+"'>Apply</button>";jobs.appendChild(c)}}
 jobs.onclick=e=>{const id=e.target.dataset.apply;if(id){const app=applyToJob(state,id);saveIdentity(identity);renderApps();document.querySelector("#resumeStatus").textContent="Application "+app.id+" prepared as "+app.status+"."}};
-function renderApps(){apps.innerHTML="";for(const a of state.applications){const j=state.jobs.find(x=>x.id===a.jobId);const c=document.createElement("article");c.className="card";c.innerHTML="<h3>"+(j?.title||a.jobId)+"</h3><p>"+(j?.company||"")+" · "+a.status+"</p><p>"+a.createdAt+"</p>";apps.appendChild(c)}}
+function renderApps(){apps.innerHTML="";for(const a of state.applications){const j=state.jobs.find(x=>x.id===a.jobId);const c=document.createElement("article");c.className="card";c.innerHTML="<h3>"+(j?.title||a.jobId)+"</h3><p>"+(j?.company||"")+" · "+a.status+"</p><p>"+a.createdAt+"</p><button data-submit>Submit</button>";
+const b=c.querySelector("[data-submit]"); if(a.status!=="draft"){b.textContent="Submitted";b.disabled=true} b.onclick=()=>{try{submitApplication(state,a.id);saveIdentity(identity);renderApps()}catch(e){alert(e.message)}}; apps.appendChild(c)}}
 function fillResume(){const r=state.resume;name.value=identity.displayName;headline.value=r.headline;skills.value=r.skills.join(", ");experience.value=r.experience.join("\n");education.value=r.education.join("\n");projects.value=r.projects.join("\n")}
 function collect(){return {headline:headline.value,skills:skills.value.split(",").map(v=>v.trim()).filter(Boolean),experience:experience.value.split("\n").map(v=>v.trim()).filter(Boolean),education:education.value.split("\n").map(v=>v.trim()).filter(Boolean),projects:projects.value.split("\n").map(v=>v.trim()).filter(Boolean)}}
 save.onclick=()=>{updateResume(state,collect());state.resume.visibility="private";saveIdentity(identity);resumeStatus.textContent="Private resume draft saved in the shared identity."};
