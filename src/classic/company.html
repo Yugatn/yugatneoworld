@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>eWorld · Company</title><link rel="stylesheet" href="../../style.css"><style>
+body{padding:20px}.company{max-width:1100px;margin:auto}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{padding:16px;border:1px solid #56645b;border-radius:12px;background:#35443a}.muted{opacity:.75}.employee{display:flex;gap:12px;align-items:center}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#9aa69c;color:#172019}
+</style></head>
+<body><main class="company">
+<div class="toolbar"><a href="./employer.html">← Employers</a><a href="./work.html">STNetwork Work</a><a href="../../index.html">eWorld</a></div>
+<section id="company"></section>
+</main>
+<script type="module">
+import{createCityState}from"../domain/city.js";import{loadIdentity,saveIdentity}from"../domain/identity.js";import{getJobs,applyToJob,submitApplication,openEmployerConversation}from"../domain/employment.js";
+const id=new URLSearchParams(location.search).get("id"),city=createCityState(),company=city.places.find(p=>p.id===id)||city.places.find(p=>p.type==="employer"),identity=loadIdentity(),root=document.querySelector("#company");
+const employees={ "company-symbiont":[["Eugene","AI agent"],["Mira","Community support"],["Alex","Infrastructure"]], "company-media":[["Nika","Producer"],["Leo","Video editor"],["Maya","Creative director"]] };
+const jobs=getJobs(identity.employment,{employerId:company.id});
+root.innerHTML="<h1>🏢 "+company.name+"</h1><p class='muted'>"+company.description+"</p><div class='card'><h2>Inside the company</h2><p>This is the spatial company layer shared with the classic STNetwork interface.</p></div><h2>People</h2><section class='grid' id='people'></section><h2>Vacancies</h2><section class='grid' id='jobs'></section>";
+const people=root.querySelector("#people"),jobsRoot=root.querySelector("#jobs");
+for(const [name,role] of (employees[company.id]||[])){const c=document.createElement("article");c.className="card employee";c.innerHTML="<div class='avatar'>●</div><div><strong>"+name+"</strong><div class='muted'>"+role+"</div></div><button>Message Eugene</button>";c.querySelector("button").onclick=()=>{openEmployerConversation(identity.employment,company.id,"Please connect me with "+name+".");saveIdentity(identity);alert("Conversation request created.")};people.appendChild(c)}
+for(const j of jobs){const c=document.createElement("article");c.className="card";const existing=identity.employment.applications.find(a=>a.jobId===j.id);c.innerHTML="<h3>"+j.title+"</h3><p>"+j.description+"</p><p>"+j.mode+" · "+j.location+"</p><p>"+j.skills.join(" · ")+"</p><button data-apply>Prepare application</button>";const b=c.querySelector("[data-apply]");if(existing){b.textContent=existing.status==="draft"?"Submit application":"Application "+existing.status;if(existing.status!=="draft")b.disabled=true}
+b.onclick=()=>{try{const app=applyToJob(identity.employment,j.id);if(identity.employment.resume.visibility==="private"){alert("Your resume is private. Publish it as discoverable in STNetwork Work before submitting.");return}submitApplication(identity.employment,app.id);saveIdentity(identity);b.textContent="Application submitted";b.disabled=true}catch(e){alert(e.message)}};jobsRoot.appendChild(c)}
+</script></body></html>
