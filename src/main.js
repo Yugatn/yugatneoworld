@@ -19,6 +19,9 @@ const keys = new Set();
 const eugene = new EugeneMessengerAdapter();
 const symbiont = new SymbiontEventAdapter();
 let active = null;
+let pointerId = null;
+let lastPointer = null;
+let lastMoveAt = 0;
 
 const labels = {
   mailbox: "📮", laptop: "💻", tv: "📺", player: "🎵", wardrobe: "👕",
@@ -27,13 +30,74 @@ const labels = {
 };
 
 function resize() {
-  const d = devicePixelRatio || 1;
-  canvas.width = canvas.clientWidth * d;
-  canvas.height = canvas.clientHeight * d;
+  const d = Math.min(devicePixelRatio || 1, 2);
+  canvas.width = Math.round(canvas.clientWidth * d);
+  canvas.height = Math.round(canvas.clientHeight * d);
   ctx.setTransform(d, 0, 0, d, 0, 0);
 }
 addEventListener("resize", resize);
 resize();
+
+function canvasPoint(event) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+function moveToward(point) {
+  const dx = point.x - world.avatar.x;
+  const dy = point.y - world.avatar.y;
+  const length = Math.hypot(dx, dy);
+  if (length < 4) return;
+
+  const step = Math.min(length, Math.max(2.5, Math.min(canvas.clientWidth, canvas.clientHeight) * 0.006));
+  world.avatar.x += dx / length * step;
+  world.avatar.y += dy / length * step;
+  world.avatar.x = Math.max(45, Math.min(canvas.clientWidth - 45, world.avatar.x));
+  world.avatar.y = Math.max(75, Math.min(canvas.clientHeight - 45, world.avatar.y));
+}
+
+function startPointer(event) {
+  if (panel.hidden === false) return;
+  pointerId = event.pointerId;
+  lastPointer = canvasPoint(event);
+  canvas.setPointerCapture?.(pointerId);
+  event.preventDefault();
+}
+
+function movePointer(event) {
+  if (pointerId !== event.pointerId || !lastPointer) return;
+  const point = canvasPoint(event);
+  const now = performance.now();
+  if (now - lastMoveAt >= 16) {
+    moveToward(point);
+    lastMoveAt = now;
+  }
+  lastPointer = point;
+  event.preventDefault();
+}
+
+function endPointer(event) {
+  if (pointerId !== event.pointerId) return;
+  pointerId = null;
+  lastPointer = null;
+  saveWorld(world);
+  event.preventDefault();
+}
+
+canvas.addEventListener("pointerdown", startPointer, { passive: false });
+canvas.addEventListener("pointermove", movePointer, { passive: false });
+canvas.addEventListener("pointerup", endPointer, { passive: false });
+canvas.addEventListener("pointercancel", endPointer, { passive: false });
+canvas.addEventListener("click", (event) => {
+  if (pointerId !== null) return;
+  const point = canvasPoint(event);
+  const object = currentObjects().find((item) => distance(point, item) <= item.r + 12);
+  if (object) {
+    active = object;
+    openPanel(object);
+    publish("object.interacted", {}, { objectId: object.id });
+  }
+});
 
 addEventListener("keydown", (e) => {
   keys.add(e.key.toLowerCase());
@@ -116,31 +180,20 @@ function openPanel(object) {
 }
 
 async function runRoomCapability(capability) {
-  if (capability === "food.delivery") {
-    desc.textContent = "Food & Delivery: choose a cafe, restaurant or grocery store. Ordering requires explicit confirmation and a verified commerce connector.";
-  } else if (capability === "cafe.search") {
-    desc.textContent = "Cafes: connector placeholder. No real availability or prices are claimed.";
-  } else if (capability === "restaurant.search") {
-    desc.textContent = "Restaurants: connector placeholder. No real availability or prices are claimed.";
-  } else if (capability === "grocery.search") {
-    desc.textContent = "Grocery stores: connector placeholder. No external order is placed.";
-  } else if (capability === "messenger") {
-    desc.textContent = "Eugene Messenger capability is exposed through its adapter.";
-  } else if (capability === "social") {
-    desc.textContent = "eWorld social capability.";
-  } else if (capability === "video") {
-    desc.textContent = "Video capability.";
-  } else if (capability === "music") {
-    desc.textContent = "Music capability.";
-  } else if (capability === "avatar.edit") {
+  if (capability === "food.delivery") desc.textContent = "Food & Delivery: choose a cafe, restaurant or grocery store. Ordering requires explicit confirmation and a verified commerce connector.";
+  else if (capability === "cafe.search") desc.textContent = "Cafes: connector placeholder. No real availability or prices are claimed.";
+  else if (capability === "restaurant.search") desc.textContent = "Restaurants: connector placeholder. No real availability or prices are claimed.";
+  else if (capability === "grocery.search") desc.textContent = "Grocery stores: connector placeholder. No external order is placed.";
+  else if (capability === "messenger") desc.textContent = "Eugene Messenger capability is exposed through its adapter.";
+  else if (capability === "social") desc.textContent = "eWorld social capability.";
+  else if (capability === "video") desc.textContent = "Video capability.";
+  else if (capability === "music") desc.textContent = "Music capability.";
+  else if (capability === "avatar.edit") {
     world.avatar.appearance.clothes = world.avatar.appearance.clothes === "casual" ? "formal" : "casual";
     desc.textContent = "Avatar outfit changed to " + world.avatar.appearance.clothes + ".";
     saveWorld(world);
-  } else if (capability === "furniture.edit") {
-    desc.textContent = "Apartment editor is the next furniture implementation stage.";
-  } else if (capability === "inventory") {
-    desc.textContent = "Inventory capability.";
-  }
+  } else if (capability === "furniture.edit") desc.textContent = "Apartment editor is the next furniture implementation stage.";
+  else if (capability === "inventory") desc.textContent = "Inventory capability.";
 
   publish(capability + ".requested", {}, { capability });
 }
@@ -160,13 +213,10 @@ async function runCapability(object, capability) {
   if (capability === "message.read" || capability === "message.compose") {
     await eugene.listConversations();
     desc.textContent = "Eugene Messenger adapter is ready; verified external transport is not connected yet.";
-  } else if (capability === "messenger" || capability === "social") {
-    desc.textContent = "Social workspace adapter placeholder. Eugene integration stays behind its verified API contract.";
-  } else if (capability === "video") {
-    desc.textContent = "Video player capability placeholder.";
-  } else if (capability === "music") {
-    desc.textContent = "Music player capability placeholder.";
-  } else if (capability === "avatar.edit") {
+  } else if (capability === "messenger" || capability === "social") desc.textContent = "Social workspace adapter placeholder. Eugene integration stays behind its verified API contract.";
+  else if (capability === "video") desc.textContent = "Video player capability placeholder.";
+  else if (capability === "music") desc.textContent = "Music player capability placeholder.";
+  else if (capability === "avatar.edit") {
     world.avatar.appearance.clothes = world.avatar.appearance.clothes === "casual" ? "formal" : "casual";
     desc.textContent = "Avatar outfit changed to " + world.avatar.appearance.clothes + ".";
     saveWorld(world);
@@ -186,7 +236,6 @@ document.querySelector("#reset").onclick = () => {
 };
 
 function tick() {
-  const speed = 3.2;
   let dx = 0;
   let dy = 0;
   if (keys.has("w") || keys.has("arrowup")) dy--;
@@ -194,12 +243,7 @@ function tick() {
   if (keys.has("a") || keys.has("arrowleft")) dx--;
   if (keys.has("d") || keys.has("arrowright")) dx++;
 
-  if (dx || dy) {
-    const length = Math.hypot(dx, dy) || 1;
-    world.avatar.x = Math.max(45, Math.min(canvas.clientWidth - 45, world.avatar.x + dx / length * speed));
-    world.avatar.y = Math.max(75, Math.min(canvas.clientHeight - 45, world.avatar.y + dy / length * speed));
-  }
-
+  if (dx || dy) moveToward({ x: world.avatar.x + dx * 100, y: world.avatar.y + dy * 100 });
   draw();
   requestAnimationFrame(tick);
 }
