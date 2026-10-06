@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>STNetwork · Work</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+    body{padding:20px}.work{max-width:1100px;margin:auto}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{padding:16px;border:1px solid #56645b;border-radius:12px;background:#35443a}.card button{margin-top:8px}.private{opacity:.8}
+  </style>
+</head>
+<body>
+<main class="work">
+<h1>STNetwork · Work</h1>
+<p class="private">Classic interface over the same eWorld employment domain.</p>
+<div class="toolbar">
+<button id="all">All jobs</button><button id="remote">Remote</button><button id="flexible">Flexible</button>
+<a href="../../index.html">Return to eWorld</a>
+</div>
+<section id="jobs" class="grid"></section>
+<h2>My resume</h2>
+<div class="card">
+<label>Name <input id="name" value="Guest"></label>
+<label>Headline <input id="headline" placeholder="What do you do?"></label>
+<label>Skills <input id="skills" placeholder="skill, skill, skill"></label>
+<button id="save">Save resume draft</button>
+<p id="resume-status"></p>
+</div>
+</main>
+<script type="module">
+import {getJobs,createResumeDraft} from "../domain/work.js";
+let resume=createResumeDraft({name:"Guest"});
+const jobs=document.querySelector("#jobs");
+function render(filter){jobs.innerHTML="";for(const j of getJobs(filter?{mode:filter}:{})){const c=document.createElement("article");c.className="card";c.innerHTML="<h3>"+j.title+"</h3><p>"+j.company+" · "+j.mode+"</p><p>"+j.skills.join(" · ")+"</p><button>Open vacancy</button><button>Prepare application</button>";jobs.appendChild(c)}}
+document.querySelector("#all").onclick=()=>render();document.querySelector("#remote").onclick=()=>render("remote");document.querySelector("#flexible").onclick=()=>render("flexible");
+document.querySelector("#save").onclick=()=>{resume.profile.name=document.querySelector("#name").value;resume.profile.headline=document.querySelector("#headline").value;resume.profile.skills=document.querySelector("#skills").value.split(",").map(v=>v.trim()).filter(Boolean);resume.status="draft";document.querySelector("#resume-status").textContent="Resume draft saved locally in the current session.";localStorage.setItem("eworld.resume",JSON.stringify(resume))};
+const saved=localStorage.getItem("eworld.resume");if(saved)try{resume=JSON.parse(saved);document.querySelector("#name").value=resume.profile.name;document.querySelector("#headline").value=resume.profile.headline;document.querySelector("#skills").value=resume.profile.skills.join(", ")}catch{}
+render();
+</script>
+</body>
+</html>
