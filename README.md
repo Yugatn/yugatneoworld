@@ -184,11 +184,28 @@ Yugatn eWorld should feel closer to **living inside a social world** than openin
 
 The interface is the environment itself.
 
+## Current implementation status
+
+The spatial loop is now connected to an employment domain shared with the classic STNetwork interface.
+
+Implemented:
+
+- city employers as spatial places;
+- entry from a city employer into a company interior;
+- company people and roles as a social layer;
+- vacancies attached to companies;
+- shared resume and application identity;
+- application lifecycle from draft to submitted;
+- employer conversation requests through the Eugene integration boundary;
+- classic employer directory linking to the same company spaces.
+
+The current implementation remains local-first: identity, resume and application state are stored locally, while external messaging and real-time infrastructure remain integration boundaries.
+
 ## Status
 
-**Project initialized — architecture and MVP specification.**
+**Spatial employment loop implemented — company, vacancy, resume, application and communication layers are connected.**
 
-Implementation should proceed incrementally, validating the spatial interaction loop before adding platform complexity.
+Implementation should continue incrementally, validating each spatial interaction before adding external infrastructure.
 
 ## Author
 
