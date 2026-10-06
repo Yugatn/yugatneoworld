@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Yugatn eWorld</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <header class="hud">
+      <strong>Yugatn eWorld</strong>
+      <span id="status">Apartment</span>
+      <button id="save" type="button">Save</button>
+      <button id="reset" type="button">Reset</button>
+    </header>
+    <section class="world-shell">
+      <canvas id="world" aria-label="2D apartment world"></canvas>
+      <aside id="panel" class="panel" hidden>
+        <h2 id="panel-title"></h2>
+        <p id="panel-description"></p>
+        <div id="panel-actions"></div>
+        <button id="close-panel" type="button">Back to world</button>
+      </aside>
+    </section>
+    <footer class="help">Move: WASD / arrows · Interact: E · Objects glow when you are close</footer>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
