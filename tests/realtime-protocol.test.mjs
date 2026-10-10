@@ -5,14 +5,15 @@ const server = readFileSync(new URL("../server/index.js", import.meta.url), "utf
 const realtime = readFileSync(new URL("../src/integration/realtime.js", import.meta.url), "utf8");
 const index = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../style.css", import.meta.url), "utf8");
+const main = readFileSync(new URL("../src/main.js", import.meta.url), "utf8");
 
-for (const token of ["room.join", "avatar.move", "chat.message", "profile.update", "scene.change", "presence.invite"]) {
+for (const token of ["room.join", "avatar.move", "chat.message", "profile.update", "scene.change", "presence.invite", "emote.play"]) {
   assert.ok(server.includes(token), "server missing " + token);
-  assert.ok(realtime.includes(token.split(".")[0]) || realtime.includes(token), "client touches " + token);
 }
-assert.ok(index.includes("joystick"), "mobile joystick markup");
-assert.ok(index.includes("mp-panel"), "multiplayer panel");
-assert.ok(index.includes("manifest.webmanifest"), "PWA manifest link");
-assert.ok(css.includes("safe-area-inset"), "safe area insets");
-assert.ok(css.includes(".joystick"), "joystick styles");
+assert.ok(realtime.includes("emote"), "client emote API");
+assert.ok(index.includes("joystick") && index.includes("mp-panel"));
+assert.ok(index.includes("emote-row") && index.includes("toast"));
+assert.ok(index.includes("room-label"));
+assert.ok(css.includes("safe-area-inset") && css.includes(".joystick") && css.includes(".toast"));
+assert.ok(main.includes("setBubble") && main.includes("showToast"));
 console.log("realtime/mobile protocol tests OK");

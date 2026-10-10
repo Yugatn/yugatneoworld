@@ -12,14 +12,16 @@
 - Reconnect with backoff
 - Mobile joystick + interact FAB
 - PWA manifest + safe-area layout
+- Emotes (wave/heart/clap/think/hello)
+- Speech bubbles + toast when panel closed
+- WebSocket smoke test in CI
 
 ## Acceptance
 
-1. `npm start` → open two browsers on `http://localhost:8080`
-2. Set the same room code → both appear in presence list
-3. Move on client A → client B sees motion
-4. Send chat → both see message
-5. On a phone-width viewport, joystick moves the avatar and E interacts
+1. `npm start` → two browsers on `http://localhost:8080`
+2. Same room code → both in presence list
+3. Move / chat / emote visible across clients
+4. Phone-width: joystick + E interact
 
 ## Not complete
 
