@@ -1,0 +1,24 @@
+name: Validate eWorld
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax check
+        run: |
+          node --check server/index.js
+          node --check src/domain/world.js
+          node --check src/domain/employment.js
+          node --check src/domain/layout.js
+          node --check src/domain/persistence.js
+          node --check src/integration/realtime.js
+          node --check src/main.js
+      - name: Domain tests
+        run: node tests/domain.test.mjs

@@ -1,12 +1,18 @@
 export class RealtimeWorld {
   constructor({ url = null, roomId = "apartment:demo", profile = {} } = {}) {
-    this.url = url || (location.protocol === "https:" ? "wss://" + location.host : "ws://" + location.host);
+    this.url = url || (typeof location !== "undefined"
+      ? (location.protocol === "https:" ? "wss://" : "ws://") + location.host
+      : "ws://localhost:8080");
     this.roomId = roomId;
     this.profile = profile;
     this.socket = null;
     this.id = null;
     this.users = new Map();
     this.listeners = new Set();
+    this._reconnectAttempts = 0;
+    this._reconnectTimer = null;
+    this._lastPosition = { x: 180, y: 220 };
+    this._closedByUser = false;
   }
 
   on(listener) {
@@ -19,13 +25,23 @@ export class RealtimeWorld {
   }
 
   connect(position = { x: 180, y: 220 }) {
+    this._closedByUser = false;
+    this._lastPosition = position;
     if (this.socket && this.socket.readyState <= 1) return;
-    this.socket = new WebSocket(this.url);
+    this.emit({ type: "realtime.status", status: "connecting" });
+    try {
+      this.socket = new WebSocket(this.url);
+    } catch {
+      this.emit({ type: "realtime.status", status: "offline" });
+      this._scheduleReconnect();
+      return;
+    }
     this.socket.addEventListener("open", () => {
+      this._reconnectAttempts = 0;
       this.send("room.join", {
         roomId: this.roomId,
-        x: position.x,
-        y: position.y,
+        x: this._lastPosition.x,
+        y: this._lastPosition.y,
         profile: this.profile
       });
       this.emit({ type: "realtime.status", status: "online" });
@@ -35,8 +51,26 @@ export class RealtimeWorld {
       try { message = JSON.parse(event.data); } catch { return; }
       this.handle(message);
     });
-    this.socket.addEventListener("close", () => this.emit({ type: "realtime.status", status: "offline" }));
-    this.socket.addEventListener("error", () => this.emit({ type: "realtime.status", status: "error" }));
+    this.socket.addEventListener("close", () => {
+      this.emit({ type: "realtime.status", status: "offline" });
+      this._scheduleReconnect();
+    });
+    this.socket.addEventListener("error", () => {
+      this.emit({ type: "realtime.status", status: "error" });
+    });
+  }
+
+  disconnect() {
+    this._closedByUser = true;
+    if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
+    this.socket?.close();
+  }
+
+  _scheduleReconnect() {
+    if (this._closedByUser) return;
+    if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
+    const delay = Math.min(15000, 800 * Math.pow(1.6, this._reconnectAttempts++));
+    this._reconnectTimer = setTimeout(() => this.connect(this._lastPosition), delay);
   }
 
   send(type, payload = {}) {
@@ -45,7 +79,11 @@ export class RealtimeWorld {
     }
   }
 
-  move(x, y) { this.send("avatar.move", { x, y }); }
+  move(x, y) {
+    this._lastPosition = { x, y };
+    this.send("avatar.move", { x, y });
+  }
+
   invite(targetId) { this.send("presence.invite", { targetId }); }
   proximity(targetId, objectId) { this.send("interaction.proximity", { targetId, objectId }); }
 
