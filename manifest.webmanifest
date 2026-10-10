@@ -1,0 +1,11 @@
+{
+  "name": "Yugatn eWorld",
+  "short_name": "eWorld",
+  "description": "Navigable 2D social apartment world",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "orientation": "any",
+  "lang": "en"
+}

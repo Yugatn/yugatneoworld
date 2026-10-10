@@ -1,13 +1,13 @@
 {
   "name": "yugatn-eworld",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node tests/domain.test.mjs",
-    "check": "node --check server/index.js && node --check src/main.js && node tests/domain.test.mjs"
+    "test": "node tests/domain.test.mjs && node tests/realtime-protocol.test.mjs",
+    "check": "node --check server/index.js && node --check src/main.js && npm test"
   },
   "dependencies": {
     "ws": "^8.18.3"
