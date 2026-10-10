@@ -2,18 +2,23 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
+## Accounts (local)
+
+- **Account** button: create a named local identity, switch between saved accounts, or continue as Guest.
+- Stable `subjectId` stored in the browser; no server password or OAuth in v0.1.
+- Multiplayer display name follows the active session.
+
 ## Multiplayer & mobile
 
-- **Multiplayer** button in the HUD: display name, room code, player list, room chat, emotes, copy invite link.
-- Share `?room=your-room` so others join the same space.
-- On touch / narrow screens: virtual joystick + **E** interact FAB; safe-area insets; PWA manifest.
-- Requires `npm start` for WebSocket multiplayer. Opening `index.html` alone stays local-only.
+- **Multiplayer** button: room code, player list, room chat, emotes, invite link (`?room=`).
+- Touch / narrow screens: virtual joystick + **E** interact; PWA manifest; safe-area insets.
+- Requires `npm start` for WebSocket multiplayer.
 
 ## Furniture
 
-- Press **E** away from objects (or open room capabilities) → **Inventory / furniture**.
-- Place chair, plant, table, or lamp next to your avatar; interact with placed items to pick them back up.
-- Placement is saved in localStorage with the world state.
+- **E** in empty space → Inventory / furniture → place chair, plant, table, lamp near the avatar.
+- Interact with placed furniture → pick up back to inventory.
+- Persists in localStorage (world version 4).
 
 ## Run locally
 
@@ -22,20 +27,20 @@ npm install
 npm start
 ```
 
-Open `http://localhost:8080` in two browsers with the same room code.
+Open `http://localhost:8080`. Use Account to set your name, then Multiplayer to join a room.
 
 ```bash
 npm test
 npm run check
 ```
 
-Controls: WASD / drag / joystick · **E** interact · **Esc** close panel or leave street.
+Controls: WASD / drag / joystick · **E** interact · **Esc** close panel.
 
 ## Status
 
-Spatial loop + employment domain + realtime rooms/chat/presence/emotes + mobile controls + furniture place/pick.
+Spatial loop + employment domain + realtime rooms/chat/presence/emotes + mobile controls + local furniture + local accounts.
 
-Still boundaries: accounts/auth, Eugene transport, media playback, shared furniture sync.
+Still boundaries: server auth, friends UI, shared furniture sync, media playback.
 
 ## Author
 
