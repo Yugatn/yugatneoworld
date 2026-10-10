@@ -60,6 +60,24 @@ Furniture, objects, room layout and avatar appearance are persistent user state.
 
 Friends may visit apartments and appear as avatars. Presence should be represented spatially where technically and privacy-wise appropriate.
 
+## Run locally
+
+```bash
+npm install
+npm start
+```
+
+Open `http://localhost:8080`.
+
+```bash
+npm test
+npm run check
+```
+
+Without the Node server, opening `index.html` still runs the local spatial loop; multiplayer stays offline until WebSocket is available.
+
+Controls: mouse / touch / WASD to move · **E** interact · **Esc** close panel or leave street.
+
 ## Initial architecture
 
 ```text
@@ -71,141 +89,31 @@ World
       ├── Objects
       ├── Media surfaces
       └── Avatar
-
-Avatar
- ├── appearance
- ├── wardrobe
- ├── position
- ├── animation state
- └── interaction state
-
-Object
- ├── type
- ├── position
- ├── appearance
- ├── inventory item
- └── interaction capability
-
-Social layer
- ├── identity
- ├── friends
- ├── visitors
- ├── messages
- └── presence
-
-Media layer
- ├── video
- ├── audio
- ├── images
- └── user collections
 ```
-
-## MVP
-
-The first implementation should establish the spatial interaction loop before building the full social platform:
-
-1. 2D world renderer;
-2. one apartment with multiple rooms;
-3. movable avatar;
-4. collision/proximity interaction;
-5. interactive mailbox;
-6. interactive laptop;
-7. interactive television;
-8. music player;
-9. basic friend/visitor representation;
-10. furniture placement and persistence;
-11. avatar clothing/appearance;
-12. save/load world state.
-
-## Interaction model
-
-The MVP should support both keyboard and pointer/touch interaction.
-
-An interaction is selected by the avatar's spatial relationship to an object, not only by a permanent button.
-
-A secondary interaction panel may appear after the user approaches an object.
-
-## Data model
-
-Core entities:
-
-- `User`
-- `Avatar`
-- `Apartment`
-- `Room`
-- `WorldObject`
-- `InventoryItem`
-- `MediaItem`
-- `Friendship`
-- `Message`
-- `Visit`
-- `WardrobeItem`
-- `WorldState`
-
-## Security and privacy
-
-Private apartments are private by default.
-
-Visitor permissions must be explicit and revocable.
-
-Media and messages retain their own access controls.
-
-The world renderer must never imply that a visitor has access merely because an avatar is visible.
-
-## Development roadmap
-
-### Phase 1 — Spatial prototype
-
-Build the apartment, avatar movement and object interaction.
-
-### Phase 2 — Personalization
-
-Add inventory, furniture, room editing and avatar wardrobe.
-
-### Phase 3 — Social layer
-
-Add profiles-as-apartments, friends, visits and messaging.
-
-### Phase 4 — Media layer
-
-Add video, music, images and personal collections.
-
-### Phase 5 — Shared world
-
-Add public spaces, discovery, events and social navigation.
-
-### Phase 6 — Persistence and infrastructure
-
-Add accounts, synchronization, moderation, privacy controls, backups and scalable real-time presence.
-
-## Product direction
-
-Yugatn eWorld should feel closer to **living inside a social world** than opening a conventional social-network dashboard.
-
-The interface is the environment itself.
 
 ## Current implementation status
 
-The spatial loop is now connected to an employment domain shared with the classic STNetwork interface.
-
 Implemented:
 
-- city employers as spatial places;
-- entry from a city employer into a company interior;
-- company people and roles as a social layer;
-- vacancies attached to companies;
-- shared resume and application identity;
-- application lifecycle from draft to submitted;
-- employer conversation requests through the Eugene integration boundary;
-- classic employer directory linking to the same company spaces.
+- 2D apartment rooms, avatar movement, proximity interaction;
+- city street with employers and services;
+- employment domain shared with classic STNetwork pages;
+- WebSocket multiplayer presence (optional server);
+- local save/load of world state;
+- responsive object/city layout for varying viewport sizes;
+- domain unit tests and CI validation workflow.
 
-The current implementation remains local-first: identity, resume and application state are stored locally, while external messaging and real-time infrastructure remain integration boundaries.
+Still integration boundaries (not fully connected):
+
+- Eugene Messenger transport;
+- Symbiont Control Plane authorization;
+- real media playback, furniture editing, accounts.
 
 ## Status
 
-**Spatial employment loop implemented — company, vacancy, resume, application and communication layers are connected.**
+**Spatial employment loop present — company, vacancy, resume, application layers connected locally.**
 
-Implementation should continue incrementally, validating each spatial interaction before adding external infrastructure.
+Continue incrementally: validate each spatial interaction before expanding external infrastructure.
 
 ## Author
 
