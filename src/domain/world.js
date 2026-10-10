@@ -1,11 +1,13 @@
 import { createApartment } from "./apartment.js";
+import { createInventory } from "./inventory.js";
 
-export const WORLD_VERSION = 3;
+export const WORLD_VERSION = 4;
 
 export function createDefaultWorld() {
   return {
     version: WORLD_VERSION,
     avatar: { x: 180, y: 220, appearance: { body:"default", hair:"default", clothes:"casual" } },
+    inventory: createInventory(),
     apartment: createApartment(),
     objects: [
       { id:"mailbox",roomId:"livingRoom",type:"mailbox",name:"Mailbox",x:130,y:120,r:38,capabilities:["message.read","message.compose"] },
