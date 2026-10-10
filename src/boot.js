@@ -99,7 +99,14 @@ function openInventory() {
   buttons.push(["Close", () => { panel.hidden = true; }]);
   show("📦 Inventory · place near you", "Items are placed next to your avatar in the current room.", buttons);
 }
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#39;" }[c])); }
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, String.fromCharCode(38) + "amp;")
+    .replace(/</g, String.fromCharCode(38) + "lt;")
+    .replace(/>/g, String.fromCharCode(38) + "gt;")
+    .replace(/"/g, String.fromCharCode(38) + "quot;")
+    .replace(/'/g, String.fromCharCode(38) + "#39;");
+}
 function updatePresence() {
   if (presenceEl) { const n = 1 + realtime.users.size; presenceEl.textContent = String(n); presenceEl.title = n + " in room"; }
   if (!mpPlayers) return;
