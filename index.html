@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#111">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#111111">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Yugatn eWorld — navigable 2D social apartment world">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>Yugatn eWorld</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,20 +16,58 @@
   <main id="app">
     <header class="hud">
       <strong>Yugatn eWorld</strong>
-      <span id="status">Connecting…</span>
+      <span id="status" class="status">Local mode</span>
+      <span id="presence" class="presence" title="Players in room">1</span>
+      <button id="mp-btn" type="button" class="ghost">Multiplayer</button>
       <button id="save" type="button">Save</button>
-      <button id="reset" type="button">Reset</button>
+      <button id="reset" type="button" class="ghost">Reset</button>
     </header>
+
     <section class="world-shell">
       <canvas id="world" aria-label="2D apartment world"></canvas>
+
       <aside id="panel" class="panel" hidden>
         <h2 id="panel-title"></h2>
         <p id="panel-description"></p>
-        <div id="panel-actions"></div>
+        <div id="panel-actions" class="panel-actions"></div>
         <button id="close-panel" type="button">Back to world</button>
       </aside>
+
+      <aside id="mp-panel" class="panel mp-panel" hidden>
+        <h2>Multiplayer</h2>
+        <label class="field">Display name
+          <input id="mp-name" type="text" maxlength="24" placeholder="Guest" autocomplete="nickname">
+        </label>
+        <label class="field">Room code
+          <input id="mp-room" type="text" maxlength="64" value="apartment:demo" spellcheck="false">
+        </label>
+        <div class="panel-actions">
+          <button id="mp-join" type="button">Join / reconnect</button>
+          <button id="mp-copy" type="button" class="ghost">Copy invite link</button>
+        </div>
+        <h3 class="subhead">Players</h3>
+        <ul id="mp-players" class="player-list"></ul>
+        <h3 class="subhead">Room chat</h3>
+        <div id="chat-log" class="chat-log" aria-live="polite"></div>
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" type="text" maxlength="140" placeholder="Message…" enterkeyhint="send">
+          <button type="submit">Send</button>
+        </form>
+        <button id="mp-close" type="button" class="ghost">Close</button>
+      </aside>
+
+      <div id="mobile-controls" class="mobile-controls" aria-hidden="true">
+        <div id="joystick" class="joystick" aria-label="Movement pad">
+          <div id="joystick-knob" class="joystick-knob"></div>
+        </div>
+        <button id="interact-btn" type="button" class="fab" aria-label="Interact">E</button>
+      </div>
     </section>
-    <footer class="help">Move: mouse / touch / WASD · E: interact · Esc: close / leave street · Gold ring: proximity · Pink: other users</footer>
+
+    <footer class="help">
+      <span class="help-desktop">WASD / drag · E interact · Esc close · Multiplayer panel for rooms & chat</span>
+      <span class="help-mobile">Joystick to move · E to interact · Multiplayer for room & chat</span>
+    </footer>
   </main>
   <script type="module" src="src/main.js"></script>
 </body>

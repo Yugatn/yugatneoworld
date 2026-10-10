@@ -21,4 +21,6 @@ jobs:
           node --check src/integration/realtime.js
           node --check src/main.js
       - name: Domain tests
-        run: node tests/domain.test.mjs
+        run: |
+          node tests/domain.test.mjs
+          node tests/realtime-protocol.test.mjs

@@ -1,60 +1,29 @@
-# Multiplayer Vertical Slice v0.1
-
-## Goal
-
-Establish the first real-time social world slice before expanding the service ecosystem.
+# Multiplayer Vertical Slice v0.1+
 
 ## Implemented
 
-- WebSocket realtime server.
-- Authoritative room membership.
-- Multiple clients can join the same apartment room.
-- Server assigns a connection identity.
-- Room snapshots synchronize existing occupants.
-- Join and leave events propagate.
-- Avatar position updates propagate between clients.
-- Browser realtime adapter.
-- Invite message transport.
-- Proximity interaction event transport.
+- WebSocket realtime server with room membership
+- Display name + room code UI
+- Invite link (`?room=`)
+- Presence counter and player list
+- Room chat (rate-limited)
+- Avatar colors, scene-aware remote rendering
+- Profile update, scene change, invite, proximity events
+- Reconnect with backoff
+- Mobile joystick + interact FAB
+- PWA manifest + safe-area layout
 
-## Current integration boundary
+## Acceptance
 
-The existing 2D renderer remains the presentation layer. The realtime layer is deliberately separated from world-domain logic.
+1. `npm start` → open two browsers on `http://localhost:8080`
+2. Set the same room code → both appear in presence list
+3. Move on client A → client B sees motion
+4. Send chat → both see message
+5. On a phone-width viewport, joystick moves the avatar and E interacts
 
-The next renderer migration can use Phaser without changing:
-- room protocol;
-- event envelope;
-- Eugene adapter;
-- SymbiontOS boundary;
-- spatial capability model.
+## Not complete
 
-## Not yet complete
-
-- persistent accounts;
-- authenticated identity;
-- authoritative collision;
-- server-side anti-cheat movement validation;
-- invitation UI;
-- remote avatar rendering in the current canvas;
-- Eugene transport;
-- real commerce connector;
-- production TLS/deployment;
-- automated multiplayer integration tests.
-
-## Acceptance criteria
-
-1. Start the server.
-2. Open two browser clients.
-3. Both join apartment:demo.
-4. Both clients receive the other client's presence.
-5. Moving client A emits an authoritative position update.
-6. Client B receives that update.
-7. Leaving client A removes its presence from client B.
-
-## Evidence status
-
-IMPLEMENTED: realtime transport and room state.
-
-NOT_TESTED: end-to-end browser multiplayer run in this environment.
-
-PROPOSED: Phaser migration after protocol stabilization.
+- Accounts / auth
+- Authoritative collision
+- Persistent chat history
+- Production TLS deployment
