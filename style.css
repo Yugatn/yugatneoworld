@@ -4,7 +4,8 @@ body{display:flex;justify-content:center;overscroll-behavior:none;touch-action:m
 #app{width:100%;max-width:1400px;height:100dvh;display:flex;flex-direction:column}
 .hud{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;padding-top:max(6px,env(safe-area-inset-top));background:#191919;border-bottom:1px solid #333}
 .hud strong{margin-right:auto;font-size:15px;white-space:nowrap}
-.status{font-size:12px;color:#9ab;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status{font-size:12px;color:#9ab;max-width:28vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.room-label{font-size:12px;color:#b8c8b8;background:#1f2a22;border:1px solid #3a4a3f;border-radius:8px;padding:2px 8px;white-space:nowrap}
 .presence{font-size:12px;background:#2a2a2a;border:1px solid #444;border-radius:999px;padding:2px 8px;color:#cde}
 .hud button,.panel button,.fab{border:1px solid #555;background:#252525;color:#eee;border-radius:10px;padding:8px 12px;cursor:pointer;min-height:40px;font:inherit}
 .hud button.ghost,.panel button.ghost{background:transparent}
@@ -26,6 +27,9 @@ body{display:flex;justify-content:center;overscroll-behavior:none;touch-action:m
 .chat-form{display:flex;gap:6px;margin-top:8px}
 .chat-form input{flex:1}
 .chat-form button{flex:0 0 auto;min-width:64px}
+.emote-row{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.emote-row button{min-width:44px;min-height:44px;font-size:20px;padding:6px;border-radius:12px;background:#1e2620;border:1px solid #3a4a3f}
+.toast{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;max-width:min(90%,420px);padding:10px 16px;background:rgba(18,22,20,.94);border:1px solid #4a5a4f;border-radius:12px;font-size:13px;color:#e8efe8;box-shadow:0 8px 24px #000a;pointer-events:none}
 .help{flex:0 0 auto;min-height:36px;padding:8px 12px;padding-bottom:max(8px,env(safe-area-inset-bottom));color:#8a8a8a;font-size:12px;background:#191919;border-top:1px solid #333}
 .help-mobile{display:none}
 .mobile-controls{display:none;position:absolute;inset:0;pointer-events:none;z-index:4}
@@ -36,11 +40,13 @@ body{display:flex;justify-content:center;overscroll-behavior:none;touch-action:m
   .hud{gap:6px;padding:6px 8px}
   .hud strong{font-size:13px}
   .hud button{padding:6px 9px;min-height:36px;font-size:13px}
+  .room-label{display:none}
   #reset{display:none}
   .panel{left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:min(62dvh,520px);padding:14px;border-radius:16px}
   .mobile-controls{display:block}
   .help-desktop{display:none}
   .help-mobile{display:inline}
+  .toast{bottom:max(150px,calc(env(safe-area-inset-bottom) + 140px))}
 }
 @media (pointer:coarse){
   .hud button,.panel button{min-height:44px}
