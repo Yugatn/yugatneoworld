@@ -66,7 +66,7 @@ wss.on("connection", (socket) => {
     profile: { name: "Guest", avatar: "default" },
     x: 180, y: 220, scene: "apartment",
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    lastMoveAt: 0, lastChatAt: 0
+    lastMoveAt: 0, lastChatAt: 0, lastEmoteAt: 0
   };
   clients.set(id, peer);
   send(socket, "welcome", { id, color: peer.color });
@@ -132,6 +132,21 @@ wss.on("connection", (socket) => {
       const text = String(payload.text || "").replace(/\s+/g, " ").trim().slice(0, 140);
       if (!text) return;
       const msg = { type: "chat.message", payload: { id: randomUUID(), fromId: id, name: peer.profile.name, color: peer.color, text, ts: now } };
+      broadcast(room, JSON.stringify(msg));
+      send(socket, msg.type, msg.payload);
+      return;
+    }
+    if (type === "emote.play") {
+      const now = Date.now();
+      if (now - peer.lastEmoteAt < 600) return;
+      peer.lastEmoteAt = now;
+      const allowed = new Set(["wave", "heart", "clap", "think", "hello"]);
+      const emote = allowed.has(String(payload.emote)) ? String(payload.emote) : null;
+      if (!emote) return;
+      const msg = {
+        type: "emote.play",
+        payload: { fromId: id, name: peer.profile.name, color: peer.color, emote, x: peer.x, y: peer.y, scene: peer.scene, ts: now }
+      };
       broadcast(room, JSON.stringify(msg));
       send(socket, msg.type, msg.payload);
       return;
