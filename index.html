@@ -19,6 +19,7 @@
       <span id="status" class="status">Local mode</span>
       <span id="room-label" class="room-label">Living room</span>
       <span id="presence" class="presence" title="Players in room">1</span>
+      <button id="account-btn" type="button" class="ghost">Account</button>
       <button id="mp-btn" type="button" class="ghost">Multiplayer</button>
       <button id="save" type="button">Save</button>
       <button id="reset" type="button" class="ghost">Reset</button>
@@ -32,6 +33,21 @@
         <p id="panel-description"></p>
         <div id="panel-actions" class="panel-actions"></div>
         <button id="close-panel" type="button">Back to world</button>
+      </aside>
+
+      <aside id="account-panel" class="panel account-panel" hidden>
+        <h2>Account</h2>
+        <p id="account-status" class="account-status">Guest mode</p>
+        <label class="field">Display name
+          <input id="account-name" type="text" maxlength="24" placeholder="Your name" autocomplete="nickname">
+        </label>
+        <div class="panel-actions">
+          <button id="account-create" type="button">Create / update account</button>
+          <button id="account-guest" type="button" class="ghost">Continue as Guest</button>
+        </div>
+        <h3 class="subhead">Saved accounts</h3>
+        <ul id="account-list" class="player-list"></ul>
+        <button id="account-close" type="button" class="ghost">Close</button>
       </aside>
 
       <aside id="mp-panel" class="panel mp-panel" hidden>
@@ -75,8 +91,8 @@
     </section>
 
     <footer class="help">
-      <span class="help-desktop">WASD / drag · E interact · Esc close · Multiplayer panel for rooms & chat</span>
-      <span class="help-mobile">Joystick to move · E to interact · Multiplayer for room & chat</span>
+      <span class="help-desktop">WASD / drag · E interact · Esc close · Account · Multiplayer</span>
+      <span class="help-mobile">Joystick to move · E to interact · Account · Multiplayer</span>
     </footer>
   </main>
   <script type="module" src="src/main.js"></script>

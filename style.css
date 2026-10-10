@@ -51,3 +51,8 @@ body{display:flex;justify-content:center;overscroll-behavior:none;touch-action:m
 @media (pointer:coarse){
   .hud button,.panel button{min-height:44px}
 }
+
+.account-status{font-size:13px;color:#b8c8b8;margin:0 0 10px}
+.account-panel .player-list li{justify-content:space-between}
+.account-panel .player-list .acct-actions{display:flex;gap:4px;margin-left:auto}
+.account-panel .player-list button{min-height:32px;padding:4px 8px;font-size:12px}
