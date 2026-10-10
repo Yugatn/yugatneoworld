@@ -12,7 +12,8 @@ export const ROOM_CAPABILITIES = {
     title: "Living room",
     capabilities: [
       { id: "video", label: "Watch video" },
-      { id: "music", label: "Listen to music" }
+      { id: "music", label: "Listen to music" },
+      { id: "inventory", label: "Inventory / furniture" }
     ]
   },
   study: {

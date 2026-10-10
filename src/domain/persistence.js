@@ -1,4 +1,5 @@
 import { WORLD_VERSION, createDefaultWorld } from "./world.js";
+import { createInventory } from "./inventory.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -14,9 +15,17 @@ function isValidWorld(data) {
 export function loadWorld(fallback = createDefaultWorld()) {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return structuredClone(fallback);
+    if (!raw) {
+      const fresh = structuredClone(fallback);
+      if (!fresh.inventory) fresh.inventory = createInventory();
+      return fresh;
+    }
     const data = JSON.parse(raw);
-    if (!isValidWorld(data)) return structuredClone(fallback);
+    if (!isValidWorld(data)) {
+      const fresh = structuredClone(fallback);
+      if (!fresh.inventory) fresh.inventory = createInventory();
+      return fresh;
+    }
     // Version mismatch: keep avatar position, rebuild objects/rooms from defaults.
     if (data.version !== WORLD_VERSION) {
       const fresh = structuredClone(fallback);
@@ -29,12 +38,24 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.apartment?.currentRoom) {
         fresh.apartment.currentRoom = data.apartment.currentRoom;
       }
+      // Preserve placed furniture (movable objects) across version bumps when possible.
+      const movable = (data.objects || []).filter((o) => o.movable && o.inventoryItemId);
+      if (movable.length) {
+        fresh.objects = fresh.objects.concat(movable);
+        const placedIds = new Set(movable.map((o) => o.inventoryItemId));
+        fresh.inventory = (data.inventory || createInventory()).filter((i) => !placedIds.has(i.id));
+      } else {
+        fresh.inventory = data.inventory || createInventory();
+      }
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
+    if (!Array.isArray(data.inventory)) data.inventory = createInventory();
     return data;
   } catch {
-    return structuredClone(fallback);
+    const fresh = structuredClone(fallback);
+    if (!fresh.inventory) fresh.inventory = createInventory();
+    return fresh;
   }
 }
 
