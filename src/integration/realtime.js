@@ -76,6 +76,7 @@ export class RealtimeWorld {
     this.send("scene.change", { scene, x, y });
   }
   chat(text) { this.send("chat.message", { text }); }
+  emote(emote) { this.send("emote.play", { emote }); }
   invite(targetId) { this.send("presence.invite", { targetId }); }
   proximity(targetId, objectId) { this.send("interaction.proximity", { targetId, objectId }); }
   rejoin(roomId, position) {
