@@ -17,6 +17,7 @@
     <header class="hud">
       <strong>Yugatn eWorld</strong>
       <span id="status" class="status">Local mode</span>
+      <span id="room-label" class="room-label">Living room</span>
       <span id="presence" class="presence" title="Players in room">1</span>
       <button id="mp-btn" type="button" class="ghost">Multiplayer</button>
       <button id="save" type="button">Save</button>
@@ -47,6 +48,14 @@
         </div>
         <h3 class="subhead">Players</h3>
         <ul id="mp-players" class="player-list"></ul>
+        <h3 class="subhead">Emotes</h3>
+        <div class="emote-row" id="emote-row">
+          <button type="button" data-emote="wave" title="Wave">👋</button>
+          <button type="button" data-emote="heart" title="Heart">❤️</button>
+          <button type="button" data-emote="clap" title="Clap">👏</button>
+          <button type="button" data-emote="think" title="Think">💭</button>
+          <button type="button" data-emote="hello" title="Hello">💬</button>
+        </div>
         <h3 class="subhead">Room chat</h3>
         <div id="chat-log" class="chat-log" aria-live="polite"></div>
         <form id="chat-form" class="chat-form">
@@ -62,6 +71,7 @@
         </div>
         <button id="interact-btn" type="button" class="fab" aria-label="Interact">E</button>
       </div>
+      <div id="toast" class="toast" hidden role="status"></div>
     </section>
 
     <footer class="help">
