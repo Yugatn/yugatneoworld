@@ -1,1 +1,1 @@
-PLACEHOLDER
+import "./boot.js";
