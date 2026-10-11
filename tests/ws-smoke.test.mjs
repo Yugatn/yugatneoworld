@@ -59,6 +59,14 @@ try {
   const emote = await waitMsg(bMsgs, (m) => m.type === "emote.play" && m.payload?.emote === "wave");
   assert.equal(emote.payload.emote, "wave");
 
+  a.send(JSON.stringify({ type: "apartment.door", payload: { open: false } }));
+  const door = await waitMsg(bMsgs, (m) => m.type === "apartment.door" && m.payload?.open === false);
+  assert.equal(door.payload.open, false);
+
+  a.send(JSON.stringify({ type: "cinema.contribute", payload: { amount: 5, filmId: "premiere-aurora" } }));
+  const cin = await waitMsg(bMsgs, (m) => m.type === "cinema.state");
+  assert.ok(cin.payload.total >= 5);
+
   const bSnap = bMsgs.find((m) => m.type === "room.snapshot");
   assert.ok(bSnap.payload.users.some((u) => u.profile?.name === "Alice"), "B snapshot should list Alice");
 
