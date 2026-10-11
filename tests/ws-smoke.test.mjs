@@ -61,6 +61,16 @@ try {
   assert.equal(boundsSnapshot.payload.self.y, 40, "join Y must be clamped");
   bounds.close();
 
+  const flood = new WebSocket(`ws://127.0.0.1:${port}`);
+  await new Promise((r, j) => { flood.once("open", r); flood.once("error", j); });
+  const floodClosed = new Promise((resolveClose) => flood.once("close", (code) => resolveClose(code)));
+  for (let i = 0; i < 220; i++) {
+    if (flood.readyState !== WebSocket.OPEN) break;
+    flood.send(JSON.stringify({ type: "unknown.smoke", payload: { n: i } }));
+  }
+  assert.equal(await floodClosed, 1008, "a connection that exceeds the message burst must be closed");
+  flood.terminate();
+
   a.send(JSON.stringify({
     type: "room.join",
     payload: { roomId: "test:smoke", x: 100, y: 100, profile: { name: "Alice" } }
