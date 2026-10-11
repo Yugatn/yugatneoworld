@@ -1,6 +1,6 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
+import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { WebSocketServer } from "ws";
@@ -116,21 +116,31 @@ const mime = {
 };
 
 const server = http.createServer(async (req, res) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    res.writeHead(405, { Allow: "GET, HEAD" });
+    res.end("Method not allowed");
+    return;
+  }
   try {
     const requestPath = decodeURIComponent((req.url || "/").split("?")[0]);
-    const safePath = normalize(requestPath === "/" ? "/index.html" : requestPath);
-    const file = join(root, safePath);
-    if (!file.startsWith(root)) throw new Error("invalid path");
+    if (!requestPath.startsWith("/") || requestPath.includes("\\0")) throw new Error("invalid path");
+    const file = resolve(root, "." + (requestPath === "/" ? "/index.html" : requestPath));
+    if (file !== root && !file.startsWith(root + sep)) throw new Error("invalid path");
     const data = await readFile(file);
     res.writeHead(200, { "Content-Type": mime[extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
-    res.end(data);
+    if (req.method === "HEAD") res.end();
+    else res.end(data);
   } catch {
     res.writeHead(404);
     res.end("Not found");
   }
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 16 * 1024, perMessageDeflate: false });
 wss.on("connection", (socket) => {
   const id = randomUUID();
   const peer = {
@@ -146,8 +156,11 @@ wss.on("connection", (socket) => {
 
   socket.on("message", (raw) => {
     let message;
-    try { message = JSON.parse(raw.toString().slice(0, 4000)); } catch { return; }
+    try { message = JSON.parse(raw.toString()); } catch { return; }
+    if (!message || typeof message !== "object" || Array.isArray(message)) return;
     const { type, payload = {} } = message;
+    if (typeof type !== "string" || type.length > 64) return;
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
 
     if (type === "room.join") {
       const roomId = sanitizeRoom(payload.roomId);
@@ -162,8 +175,9 @@ wss.on("connection", (socket) => {
         }
       }
       peer.roomId = roomId;
-      peer.x = Number.isFinite(Number(payload.x)) ? Number(payload.x) : 180;
-      peer.y = Number.isFinite(Number(payload.y)) ? Number(payload.y) : 220;
+      const joinX = Number(payload.x), joinY = Number(payload.y);
+      peer.x = Number.isFinite(joinX) ? Math.max(20, Math.min(4000, joinX)) : 180;
+      peer.y = Number.isFinite(joinY) ? Math.max(40, Math.min(3000, joinY)) : 220;
       peer.scene = payload.scene === "street" ? "street" : "apartment";
       if (payload.doorOpen != null) peer.doorOpen = Boolean(payload.doorOpen);
       if (payload.profile) {
@@ -356,6 +370,10 @@ wss.on("connection", (socket) => {
       const list = furnitureFor(peer.roomId);
       const idx = list.findIndex((o) => o.id === fid);
       if (idx < 0) return;
+      if (list[idx].ownerId !== id) {
+        send(socket, "furniture.error", { reason: "not_owner", id: fid });
+        return;
+      }
       list.splice(idx, 1);
       const msg = JSON.stringify({ type: "furniture.removed", payload: { id: fid, by: id } });
       broadcast(room, msg);
