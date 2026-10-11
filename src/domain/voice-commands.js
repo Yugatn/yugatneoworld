@@ -30,10 +30,18 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "climate.cooler", label: "Cooler", aliases: ["cooler", "colder", "холоднее", "похолоднее", "уменьши температуру"] },
   { id: "tv.toggle", label: "Toggle TV", aliases: ["tv", "television", "toggle tv", "turn on tv", "turn off tv", "телевизор", "включи телевизор", "выключи телевизор"] },
   { id: "music.toggle", label: "Toggle music", aliases: ["music", "toggle music", "play music", "stop music", "музыка", "включи музыку", "выключи музыку"] },
-  // Avatar / appearance
+  // Avatar
   { id: "avatar.wardrobe", label: "Wardrobe", aliases: ["wardrobe", "clothes", "change clothes", "outfit", "шкаф", "одежда", "переодеться", "гардероб"] },
   { id: "avatar.appearance", label: "Appearance", aliases: ["appearance", "look", "my look", "внешность", "как я выгляжу", "внешний вид"] },
   { id: "avatar.shave", label: "Shave", aliases: ["shave", "shave me", "побрить", "побрей", "побриться", "бритьё"] },
+  // Rooms / commerce
+  { id: "room.bathroom", label: "Bathroom", aliases: ["bathroom", "go to bathroom", "ванна", "ванная", "в ванную", "туалет"] },
+  { id: "room.kitchen", label: "Kitchen", aliases: ["kitchen", "go to kitchen", "кухня", "на кухню"] },
+  { id: "shop.open", label: "Shop delivery", aliases: ["shop", "order delivery", "delivery", "магазин", "доставка", "заказать", "заказ"] },
+  { id: "shop.bathroom", label: "Bath products", aliases: ["order shampoo", "bath products", "shampoo", "шампунь", "мыло", "полотенце", "товары для ванны"] },
+  { id: "recipe.list", label: "Recipes", aliases: ["recipes", "recipe book", "cook", "рецепты", "книга рецептов", "что приготовить"] },
+  { id: "bathroom.shower", label: "Shower", aliases: ["take a shower", "shower", "душ", "принять душ"] },
+  { id: "bathroom.bath", label: "Bath", aliases: ["take a bath", "bath", "принять ванну", "лечь в ванну"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
