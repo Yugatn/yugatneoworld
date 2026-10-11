@@ -12,6 +12,8 @@ Status: implementation snapshot for the realtime prototype.
 - Server limits are 200 concurrent connections, 500 rooms, and 50 members per room.
 - Avatar coordinates are clamped server-side.
 - Chat and emotes have additional event-specific cooldowns.
+- Furniture placement derives `roomId` and `ownerId` from server-side connection context, ignoring client-supplied values for those fields.
+- Furniture capability labels are allowlisted; arbitrary client-supplied labels such as `admin` are discarded.
 - Furniture removal is restricted to the connection that placed the item.
 - Transient keys are removed when the host disconnects; guest references and expired keys are cleaned from other hosts' key lists on disconnect.
 
