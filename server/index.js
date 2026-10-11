@@ -1,17 +1,20 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
+import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { WebSocketServer } from "ws";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const port = Number(process.env.PORT || 8080);
 const clients = new Map();
 const rooms = new Map();
 const cinemas = new Map();
 const furnitureByRoom = new Map();
 const keysByHost = new Map();
+const MAX_CONNECTIONS = 200;
+const MAX_ROOMS = 500;
+const MAX_ROOM_MEMBERS = 50;
 const COLORS = ["#f1a6cf", "#a6e3f1", "#c7f1a6", "#f1d0a6", "#d0a6f1", "#a6f1d8"];
 
 function roomFor(id) {
@@ -66,7 +69,10 @@ function sanitizeFurniture(obj) {
     x: Math.max(0, Math.min(4000, Number(obj.x) || 0)),
     y: Math.max(0, Math.min(3000, Number(obj.y) || 0)),
     r: Math.max(16, Math.min(80, Number(obj.r) || 36)),
-    capabilities: Array.isArray(obj.capabilities) ? obj.capabilities.slice(0, 8).map(String) : ["furniture.pick"],
+    // Capabilities are server-owned policy labels, never arbitrary client input.
+    capabilities: Array.isArray(obj.capabilities)
+      ? [...new Set(obj.capabilities.map(String).filter((cap) => cap === "furniture.pick"))]
+      : ["furniture.pick"],
     inventoryItemId: String(obj.inventoryItemId || "").slice(0, 32) || null,
     movable: true,
     ownerId: obj.ownerId ? String(obj.ownerId).slice(0, 64) : null
@@ -115,23 +121,47 @@ const mime = {
   ".webmanifest": "application/manifest+json"
 };
 
+// Only expose browser entry points and browser runtime assets. Repository
+// metadata, tests, server code, and internal documentation are not web assets.
+const publicRootFiles = new Set(["index.html", "style.css", "manifest.webmanifest"]);
+function isPublicAsset(relativePath) {
+  if (publicRootFiles.has(relativePath)) return true;
+  return relativePath.startsWith("src/") && /\.(?:js|html|css)$/.test(relativePath);
+}
+
 const server = http.createServer(async (req, res) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    res.writeHead(405, { Allow: "GET, HEAD" });
+    res.end("Method not allowed");
+    return;
+  }
   try {
     const requestPath = decodeURIComponent((req.url || "/").split("?")[0]);
-    const safePath = normalize(requestPath === "/" ? "/index.html" : requestPath);
-    const file = join(root, safePath);
-    if (!file.startsWith(root)) throw new Error("invalid path");
+    if (!requestPath.startsWith("/") || requestPath.includes("\\0")) throw new Error("invalid path");
+    const relativePath = (requestPath === "/" ? "index.html" : requestPath.slice(1)).replaceAll("\\\\", "/");
+    if (!isPublicAsset(relativePath)) throw new Error("not a public asset");
+    const file = resolve(root, "." + (requestPath === "/" ? "/index.html" : requestPath));
+    if (file !== root && !file.startsWith(root + sep)) throw new Error("invalid path");
     const data = await readFile(file);
     res.writeHead(200, { "Content-Type": mime[extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
-    res.end(data);
+    if (req.method === "HEAD") res.end();
+    else res.end(data);
   } catch {
     res.writeHead(404);
     res.end("Not found");
   }
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 16 * 1024, perMessageDeflate: false });
 wss.on("connection", (socket) => {
+  if (clients.size >= MAX_CONNECTIONS) {
+    socket.close(1013, "Server capacity reached");
+    return;
+  }
   const id = randomUUID();
   const peer = {
     id, socket, roomId: null,
@@ -139,18 +169,45 @@ wss.on("connection", (socket) => {
     x: 180, y: 220, scene: "apartment",
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     doorOpen: true,
-    lastMoveAt: 0, lastChatAt: 0, lastEmoteAt: 0
+    lastMoveAt: 0, lastChatAt: 0, lastEmoteAt: 0,
+    messageTokens: 180,
+    messageTokenUpdatedAt: Date.now()
   };
   clients.set(id, peer);
   send(socket, "welcome", { id, color: peer.color });
 
   socket.on("message", (raw) => {
+    // Token bucket limits parser and dispatch work per connection. The burst
+    // accommodates initial room setup; sustained movement remains below the
+    // refill rate because avatar.move is separately throttled.
+    const now = Date.now();
+    const elapsedSeconds = Math.max(0, now - peer.messageTokenUpdatedAt) / 1000;
+    peer.messageTokens = Math.min(180, peer.messageTokens + elapsedSeconds * 60);
+    peer.messageTokenUpdatedAt = now;
+    if (peer.messageTokens < 1) {
+      socket.close(1008, "Message rate limit exceeded");
+      return;
+    }
+    peer.messageTokens -= 1;
+
     let message;
-    try { message = JSON.parse(raw.toString().slice(0, 4000)); } catch { return; }
+    try { message = JSON.parse(raw.toString()); } catch { return; }
+    if (!message || typeof message !== "object" || Array.isArray(message)) return;
     const { type, payload = {} } = message;
+    if (typeof type !== "string" || type.length > 64) return;
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
 
     if (type === "room.join") {
       const roomId = sanitizeRoom(payload.roomId);
+      const targetRoom = rooms.get(roomId);
+      if (!targetRoom && rooms.size >= MAX_ROOMS) {
+        send(socket, "room.error", { reason: "server_room_capacity" });
+        return;
+      }
+      if (targetRoom && !targetRoom.has(id) && targetRoom.size >= MAX_ROOM_MEMBERS) {
+        send(socket, "room.error", { reason: "room_capacity", limit: MAX_ROOM_MEMBERS });
+        return;
+      }
       if (peer.roomId) {
         const prev = roomFor(peer.roomId);
         prev.delete(id);
@@ -162,8 +219,9 @@ wss.on("connection", (socket) => {
         }
       }
       peer.roomId = roomId;
-      peer.x = Number.isFinite(Number(payload.x)) ? Number(payload.x) : 180;
-      peer.y = Number.isFinite(Number(payload.y)) ? Number(payload.y) : 220;
+      const joinX = Number(payload.x), joinY = Number(payload.y);
+      peer.x = Number.isFinite(joinX) ? Math.max(20, Math.min(4000, joinX)) : 180;
+      peer.y = Number.isFinite(joinY) ? Math.max(40, Math.min(3000, joinY)) : 220;
       peer.scene = payload.scene === "street" ? "street" : "apartment";
       if (payload.doorOpen != null) peer.doorOpen = Boolean(payload.doorOpen);
       if (payload.profile) {
@@ -339,7 +397,9 @@ wss.on("connection", (socket) => {
       return;
     }
     if (type === "furniture.place") {
-      const obj = sanitizeFurniture({ ...payload, ownerId: id });
+      // Room membership and ownership come from the authenticated connection
+      // context, not from client-supplied furniture fields.
+      const obj = sanitizeFurniture({ ...payload, roomId: peer.roomId, ownerId: id });
       if (!obj) return;
       const list = furnitureFor(peer.roomId);
       if (list.some((o) => o.id === obj.id)) return;
@@ -356,6 +416,10 @@ wss.on("connection", (socket) => {
       const list = furnitureFor(peer.roomId);
       const idx = list.findIndex((o) => o.id === fid);
       if (idx < 0) return;
+      if (list[idx].ownerId !== id) {
+        send(socket, "furniture.error", { reason: "not_owner", id: fid });
+        return;
+      }
       list.splice(idx, 1);
       const msg = JSON.stringify({ type: "furniture.removed", payload: { id: fid, by: id } });
       broadcast(room, msg);
@@ -411,6 +475,13 @@ wss.on("connection", (socket) => {
       }
     }
     keysByHost.delete(id);
+    // Remove expired or disconnected guests from other hosts' transient key
+    // lists; no key should outlive its connection identity in this MVP.
+    for (const [hostId, list] of keysByHost) {
+      const remaining = list.filter((key) => key.guestId !== id && key.expiresAt > Date.now());
+      if (remaining.length) keysByHost.set(hostId, remaining);
+      else keysByHost.delete(hostId);
+    }
     clients.delete(id);
   });
 });

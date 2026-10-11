@@ -29,6 +29,17 @@ async function waitMsg(arr, pred, ms = 5000) {
 
 try {
   await sleep(700);
+
+  const home = await fetch(`http://127.0.0.1:${port}/`);
+  assert.equal(home.status, 200, "home page should be served");
+  assert.match(home.headers.get("content-security-policy") || "", /default-src 'self'/);
+  for (const privatePath of ["/package.json", "/server/index.js", "/docs/ROADMAP.md", "/tests/ws-smoke.test.mjs"]) {
+    const response = await fetch(`http://127.0.0.1:${port}${privatePath}`);
+    assert.equal(response.status, 404, `${privatePath} must not be served publicly`);
+  }
+  const methodCheck = await fetch(`http://127.0.0.1:${port}/`, { method: "POST" });
+  assert.equal(methodCheck.status, 405, "unsupported HTTP methods should be rejected");
+
   const a = new WebSocket(`ws://127.0.0.1:${port}`);
   const b = new WebSocket(`ws://127.0.0.1:${port}`);
   const aMsgs = track(a);
@@ -37,6 +48,28 @@ try {
     new Promise((r, j) => { a.once("open", r); a.once("error", j); }),
     new Promise((r, j) => { b.once("open", r); b.once("error", j); })
   ]);
+
+  const bounds = new WebSocket(`ws://127.0.0.1:${port}`);
+  const boundsMsgs = track(bounds);
+  await new Promise((r, j) => { bounds.once("open", r); bounds.once("error", j); });
+  bounds.send(JSON.stringify({
+    type: "room.join",
+    payload: { roomId: "test:bounds", x: 999999, y: -100, profile: { name: "Bounds" } }
+  }));
+  const boundsSnapshot = await waitMsg(boundsMsgs, (m) => m.type === "room.snapshot");
+  assert.equal(boundsSnapshot.payload.self.x, 4000, "join X must be clamped");
+  assert.equal(boundsSnapshot.payload.self.y, 40, "join Y must be clamped");
+  bounds.close();
+
+  const flood = new WebSocket(`ws://127.0.0.1:${port}`);
+  await new Promise((r, j) => { flood.once("open", r); flood.once("error", j); });
+  const floodClosed = new Promise((resolveClose) => flood.once("close", (code) => resolveClose(code)));
+  for (let i = 0; i < 220; i++) {
+    if (flood.readyState !== WebSocket.OPEN) break;
+    flood.send(JSON.stringify({ type: "unknown.smoke", payload: { n: i } }));
+  }
+  assert.equal(await floodClosed, 1008, "a connection that exceeds the message burst must be closed");
+  flood.terminate();
 
   a.send(JSON.stringify({
     type: "room.join",
@@ -70,13 +103,22 @@ try {
   a.send(JSON.stringify({
     type: "furniture.place",
     payload: {
-      id: "chair-basic-smoke1", roomId: "livingRoom", type: "furniture", subtype: "chair",
-      name: "Chair", label: "💺", x: 220, y: 240, r: 36, capabilities: ["furniture.pick"],
+      id: "chair-basic-smoke1", roomId: "forged:other-room", type: "furniture", subtype: "chair",
+      name: "Chair", label: "💺", x: 220, y: 240, r: 36, capabilities: ["admin", "furniture.pick", "room.owner"],
       inventoryItemId: "chair-basic", movable: true
     }
   }));
   const placed = await waitMsg(bMsgs, (m) => m.type === "furniture.placed" && m.payload?.id === "chair-basic-smoke1");
   assert.equal(placed.payload.name, "Chair");
+  assert.equal(placed.payload.roomId, "test:smoke", "furniture room must come from server membership");
+  assert.deepEqual(placed.payload.capabilities, ["furniture.pick"], "client must not inject arbitrary capabilities");
+
+  b.send(JSON.stringify({ type: "furniture.remove", payload: { id: "chair-basic-smoke1" } }));
+  const denied = await waitMsg(bMsgs, (m) => m.type === "furniture.error" && m.payload?.id === "chair-basic-smoke1");
+  assert.equal(denied.payload.reason, "not_owner");
+  await sleep(100);
+  assert.equal(aMsgs.some((m) => m.type === "furniture.removed" && m.payload?.id === "chair-basic-smoke1"), false,
+    "a non-owner must not remove another user's furniture");
 
   a.send(JSON.stringify({ type: "furniture.remove", payload: { id: "chair-basic-smoke1" } }));
   const removed = await waitMsg(bMsgs, (m) => m.type === "furniture.removed" && m.payload?.id === "chair-basic-smoke1");
