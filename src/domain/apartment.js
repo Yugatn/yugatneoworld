@@ -2,7 +2,8 @@ export const ROOMS = {
   livingRoom: { id: "livingRoom", name: "Living room", x: 0, y: 0 },
   kitchen: { id: "kitchen", name: "Kitchen", x: 1, y: 0 },
   study: { id: "study", name: "Study", x: 0, y: 1 },
-  bedroom: { id: "bedroom", name: "Bedroom", x: 1, y: 1 }
+  bedroom: { id: "bedroom", name: "Bedroom", x: 1, y: 1 },
+  bathroom: { id: "bathroom", name: "Bathroom", x: 2, y: 1 }
 };
 
 export function createApartment() {
