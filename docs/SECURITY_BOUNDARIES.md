@@ -17,6 +17,15 @@ Status: implementation snapshot for the realtime prototype.
 - Furniture removal is restricted to the connection that placed the item.
 - Transient keys are removed when the host disconnects; guest references and expired keys are cleaned from other hosts' key lists on disconnect.
 
+## Session primitive added (not yet wired to WebSocket authentication)
+
+- `server/session-registry.js` creates opaque 256-bit bearer tokens and stores only SHA-256 token digests in an in-memory registry.
+- Verification returns the server-owned subject ID and timestamps, never the bearer token.
+- Sessions have bounded TTLs, explicit revocation, and expired-entry pruning.
+- Unit tests cover successful verification, unknown tokens, expiry, revocation, invalid subject IDs, and TTL bounds.
+- The registry is deliberately not exposed as a public client-controlled issuance endpoint. Its `create()` method must only be called after a trusted authentication step.
+- The registry is process-local; restart invalidates sessions. Until an actual authentication flow is implemented and the WebSocket handshake/message path verifies credentials, this primitive does not authenticate peers.
+
 ## Explicit non-goals / residual risks
 
 These controls are defense-in-depth, not production-grade identity or authorization.
