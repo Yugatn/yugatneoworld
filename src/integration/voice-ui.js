@@ -41,8 +41,32 @@ export function runVoiceCommand(id, api) {
     case "emote.hello":
       api.emote(id.split(".")[1]);
       break;
+    case "smarthome.panel":
+      api.openSmartHome?.();
+      break;
+    case "lights.on":
+      api.smartHomeLights?.(true);
+      break;
+    case "lights.off":
+      api.smartHomeLights?.(false);
+      break;
+    case "light.toggle":
+      api.smartHomeToggleLight?.();
+      break;
+    case "climate.warmer":
+      api.smartHomeAdjustTemp?.(1);
+      break;
+    case "climate.cooler":
+      api.smartHomeAdjustTemp?.(-1);
+      break;
+    case "tv.toggle":
+      api.smartHomeToggleTv?.();
+      break;
+    case "music.toggle":
+      api.smartHomeToggleMusic?.();
+      break;
     case "help":
-      api.show("\ud83c\udf99 Voice commands", listVoiceHelp().slice(0, 10).join(". ") + ".", [
+      api.show("\ud83c\udf99 Voice commands", listVoiceHelp().slice(0, 12).join(". ") + ".", [
         ["Close", () => api.closePanel?.()]
       ]);
       break;
