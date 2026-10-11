@@ -117,11 +117,6 @@ export const RECIPES = Object.freeze([
   }
 ]);
 
-/** Optional ingredient not always in grocery — map aliases. */
-const INGREDIENT_ALIASES = Object.freeze({
-  carrot: "onion" // fallback if carrot not stocked: still order a veg; UI can note substitution
-});
-
 export function listRecipes(filter = {}) {
   let list = RECIPES.map((r) => ({
     ...r,
@@ -146,13 +141,11 @@ export function getRecipe(id) {
   };
 }
 
-/** Resolve ingredient item ids (with aliases) that exist in commerce. */
+/** Resolve ingredient item ids that exist in commerce. */
 export function resolveIngredientIds(recipe) {
   const ids = [];
   for (const ing of recipe.ingredients || []) {
-    let id = ing.itemId;
-    if (!findItemAnywhere(id) && INGREDIENT_ALIASES[id]) id = INGREDIENT_ALIASES[id];
-    if (findItemAnywhere(id)) ids.push(id);
+    if (findItemAnywhere(ing.itemId)) ids.push(ing.itemId);
   }
   return [...new Set(ids)];
 }
@@ -164,11 +157,16 @@ export function resolveIngredientIds(recipe) {
 export function missingIngredients(recipe, supplies = {}) {
   const missing = [];
   for (const ing of recipe.ingredients || []) {
-    let id = ing.itemId;
-    if (!findItemAnywhere(id) && INGREDIENT_ALIASES[id]) id = INGREDIENT_ALIASES[id];
+    const id = ing.itemId;
     const need = Math.max(1, Number(ing.qty) || 1);
     const have = Number(supplies[id]) || 0;
-    if (have < need) missing.push({ itemId: id, need: need - have, name: findItemAnywhere(id)?.item?.name || id });
+    if (have < need) {
+      missing.push({
+        itemId: id,
+        need: need - have,
+        name: findItemAnywhere(id)?.item?.name || id
+      });
+    }
   }
   return missing;
 }
@@ -177,15 +175,7 @@ export function missingIngredients(recipe, supplies = {}) {
 export function orderIngredientsForRecipe(recipe, supplies = {}) {
   const missing = missingIngredients(recipe, supplies);
   if (!missing.length) return { ok: true, order: null, message: "All ingredients already in stock." };
-  const lines = missing.map((m) => {
-    const hit = findItemAnywhere(m.itemId);
-    return hit ? { vendorId: hit.vendor.id, itemId: m.itemId, qty: m.need } : null;
-  }).filter(Boolean);
-  const order = draftOrderForIngredients(
-    lines.map((l) => l.itemId),
-    { qty: 1 }
-  );
-  // Adjust qty per missing line
+  const order = draftOrderForIngredients(missing.map((m) => m.itemId), { qty: 1 });
   if (order) {
     for (const line of order.lines) {
       const m = missing.find((x) => x.itemId === line.itemId);
