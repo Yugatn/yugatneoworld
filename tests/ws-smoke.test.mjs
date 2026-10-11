@@ -103,13 +103,15 @@ try {
   a.send(JSON.stringify({
     type: "furniture.place",
     payload: {
-      id: "chair-basic-smoke1", roomId: "livingRoom", type: "furniture", subtype: "chair",
-      name: "Chair", label: "💺", x: 220, y: 240, r: 36, capabilities: ["furniture.pick"],
+      id: "chair-basic-smoke1", roomId: "forged:other-room", type: "furniture", subtype: "chair",
+      name: "Chair", label: "💺", x: 220, y: 240, r: 36, capabilities: ["admin", "furniture.pick", "room.owner"],
       inventoryItemId: "chair-basic", movable: true
     }
   }));
   const placed = await waitMsg(bMsgs, (m) => m.type === "furniture.placed" && m.payload?.id === "chair-basic-smoke1");
   assert.equal(placed.payload.name, "Chair");
+  assert.equal(placed.payload.roomId, "test:smoke", "furniture room must come from server membership");
+  assert.deepEqual(placed.payload.capabilities, ["furniture.pick"], "client must not inject arbitrary capabilities");
 
   b.send(JSON.stringify({ type: "furniture.remove", payload: { id: "chair-basic-smoke1" } }));
   const denied = await waitMsg(bMsgs, (m) => m.type === "furniture.error" && m.payload?.id === "chair-basic-smoke1");
