@@ -120,7 +120,7 @@ const mime = {
 const publicRootFiles = new Set(["index.html", "style.css", "manifest.webmanifest"]);
 function isPublicAsset(relativePath) {
   if (publicRootFiles.has(relativePath)) return true;
-  return relativePath.startsWith("src/") && /\\.(?:js|html|css)$/.test(relativePath);
+  return relativePath.startsWith("src/") && /\.(?:js|html|css)$/.test(relativePath);
 }
 
 const server = http.createServer(async (req, res) => {
