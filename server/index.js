@@ -12,6 +12,9 @@ const rooms = new Map();
 const cinemas = new Map();
 const furnitureByRoom = new Map();
 const keysByHost = new Map();
+const MAX_CONNECTIONS = 200;
+const MAX_ROOMS = 500;
+const MAX_ROOM_MEMBERS = 50;
 const COLORS = ["#f1a6cf", "#a6e3f1", "#c7f1a6", "#f1d0a6", "#d0a6f1", "#a6f1d8"];
 
 function roomFor(id) {
@@ -152,6 +155,10 @@ const server = http.createServer(async (req, res) => {
 
 const wss = new WebSocketServer({ server, maxPayload: 16 * 1024, perMessageDeflate: false });
 wss.on("connection", (socket) => {
+  if (clients.size >= MAX_CONNECTIONS) {
+    socket.close(1013, "Server capacity reached");
+    return;
+  }
   const id = randomUUID();
   const peer = {
     id, socket, roomId: null,
@@ -174,6 +181,15 @@ wss.on("connection", (socket) => {
 
     if (type === "room.join") {
       const roomId = sanitizeRoom(payload.roomId);
+      const targetRoom = rooms.get(roomId);
+      if (!targetRoom && rooms.size >= MAX_ROOMS) {
+        send(socket, "room.error", { reason: "server_room_capacity" });
+        return;
+      }
+      if (targetRoom && !targetRoom.has(id) && targetRoom.size >= MAX_ROOM_MEMBERS) {
+        send(socket, "room.error", { reason: "room_capacity", limit: MAX_ROOM_MEMBERS });
+        return;
+      }
       if (peer.roomId) {
         const prev = roomFor(peer.roomId);
         prev.delete(id);
