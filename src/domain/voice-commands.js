@@ -21,7 +21,7 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "emote.clap", label: "Clap", aliases: ["clap", "applaud", "хлопай", "аплодисменты"] },
   { id: "emote.think", label: "Think", aliases: ["think", "hmm", "подумай", "думаю"] },
   { id: "emote.hello", label: "Hello", aliases: ["hello", "hi", "hello chat", "приветствие"] },
-  // Smart home — digital 2D apartment copy
+  // Smart home
   { id: "smarthome.panel", label: "Smart home", aliases: ["smart home", "smarthome", "умный дом", "умныйдом", "home control", "управление домом"] },
   { id: "lights.on", label: "Lights on", aliases: ["lights on", "turn on lights", "включи свет", "свет включить", "включи освещение", "turn the lights on"] },
   { id: "lights.off", label: "Lights off", aliases: ["lights off", "turn off lights", "выключи свет", "свет выключить", "выключи освещение", "turn the lights off"] },
@@ -30,6 +30,10 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "climate.cooler", label: "Cooler", aliases: ["cooler", "colder", "холоднее", "похолоднее", "уменьши температуру"] },
   { id: "tv.toggle", label: "Toggle TV", aliases: ["tv", "television", "toggle tv", "turn on tv", "turn off tv", "телевизор", "включи телевизор", "выключи телевизор"] },
   { id: "music.toggle", label: "Toggle music", aliases: ["music", "toggle music", "play music", "stop music", "музыка", "включи музыку", "выключи музыку"] },
+  // Avatar / appearance
+  { id: "avatar.wardrobe", label: "Wardrobe", aliases: ["wardrobe", "clothes", "change clothes", "outfit", "шкаф", "одежда", "переодеться", "гардероб"] },
+  { id: "avatar.appearance", label: "Appearance", aliases: ["appearance", "look", "my look", "внешность", "как я выгляжу", "внешний вид"] },
+  { id: "avatar.shave", label: "Shave", aliases: ["shave", "shave me", "побрить", "побрей", "побриться", "бритьё"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
