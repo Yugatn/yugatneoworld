@@ -8,6 +8,13 @@ A social network designed as a navigable 2D world rather than a conventional pro
 - Stable `subjectId` stored in the browser; no server password or OAuth in v0.1.
 - Multiplayer display name follows the active session.
 
+## Visits, streets & cinema
+
+- **Door open/closed**: room menu → allow or block visits.
+- **Friends** (Multiplayer → Friend): street tier grows with contact count.
+- On the **street**, open friend doors are visitable; closed doors are not.
+- **Street Cinema** (3+ friends): pool symbolic credits; friends pay less to unlock a shared screening.
+
 ## Multiplayer & mobile
 
 - **Multiplayer** button: room code, player list, room chat, emotes, invite link (`?room=`).
@@ -38,9 +45,9 @@ Controls: WASD / drag / joystick · **E** interact · **Esc** close panel.
 
 ## Status
 
-Spatial loop + employment domain + realtime rooms/chat/presence/emotes + mobile controls + local furniture + local accounts.
+Spatial loop + employment domain + realtime rooms/chat/presence/emotes + mobile controls + local furniture + local accounts + visits/streets/cinema pool.
 
-Still boundaries: server auth, friends UI, shared furniture sync, media playback.
+Still boundaries: server auth, real film streaming, shared furniture sync, PIN.
 
 ## Author
 
