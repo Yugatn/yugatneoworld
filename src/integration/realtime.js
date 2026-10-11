@@ -11,6 +11,7 @@ export class RealtimeWorld {
     this.doorOpen = true;
     this.users = new Map();
     this.cinema = null;
+    this.furniture = [];
     this.listeners = new Set();
     this._reconnectAttempts = 0;
     this._reconnectTimer = null;
@@ -85,6 +86,8 @@ export class RealtimeWorld {
   addFriend(targetId) { this.send("friend.add", { targetId }); }
   cinemaContribute(amount, filmId) { this.send("cinema.contribute", { amount, filmId }); }
   cinemaJoin() { this.send("cinema.join", {}); }
+  placeFurniture(obj) { this.send("furniture.place", obj); }
+  removeFurniture(id) { this.send("furniture.remove", { id }); }
   chat(text) { this.send("chat.message", { text }); }
   emote(emote) { this.send("emote.play", { emote }); }
   invite(targetId) { this.send("presence.invite", { targetId }); }
@@ -106,6 +109,7 @@ export class RealtimeWorld {
       if (payload.self?.color) this.color = payload.self.color;
       if (payload.self?.doorOpen != null) this.doorOpen = payload.self.doorOpen;
       if (payload.cinema) this.cinema = payload.cinema;
+      this.furniture = Array.isArray(payload.furniture) ? payload.furniture : [];
     }
     if (type === "user.joined") this.users.set(payload.id, payload);
     if (type === "user.left") this.users.delete(payload.id);

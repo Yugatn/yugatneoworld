@@ -67,8 +67,24 @@ try {
   const cin = await waitMsg(bMsgs, (m) => m.type === "cinema.state");
   assert.ok(cin.payload.total >= 5);
 
+  a.send(JSON.stringify({
+    type: "furniture.place",
+    payload: {
+      id: "chair-basic-smoke1", roomId: "livingRoom", type: "furniture", subtype: "chair",
+      name: "Chair", label: "🪑", x: 220, y: 240, r: 36, capabilities: ["furniture.pick"],
+      inventoryItemId: "chair-basic", movable: true
+    }
+  }));
+  const placed = await waitMsg(bMsgs, (m) => m.type === "furniture.placed" && m.payload?.id === "chair-basic-smoke1");
+  assert.equal(placed.payload.name, "Chair");
+
+  a.send(JSON.stringify({ type: "furniture.remove", payload: { id: "chair-basic-smoke1" } }));
+  const removed = await waitMsg(bMsgs, (m) => m.type === "furniture.removed" && m.payload?.id === "chair-basic-smoke1");
+  assert.equal(removed.payload.id, "chair-basic-smoke1");
+
   const bSnap = bMsgs.find((m) => m.type === "room.snapshot");
   assert.ok(bSnap.payload.users.some((u) => u.profile?.name === "Alice"), "B snapshot should list Alice");
+  assert.ok(Array.isArray(bSnap.payload.furniture), "snapshot should include furniture array");
 
   a.close();
   b.close();
