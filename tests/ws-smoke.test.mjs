@@ -78,6 +78,13 @@ try {
   const placed = await waitMsg(bMsgs, (m) => m.type === "furniture.placed" && m.payload?.id === "chair-basic-smoke1");
   assert.equal(placed.payload.name, "Chair");
 
+  b.send(JSON.stringify({ type: "furniture.remove", payload: { id: "chair-basic-smoke1" } }));
+  const denied = await waitMsg(bMsgs, (m) => m.type === "furniture.error" && m.payload?.id === "chair-basic-smoke1");
+  assert.equal(denied.payload.reason, "not_owner");
+  await sleep(100);
+  assert.equal(aMsgs.some((m) => m.type === "furniture.removed" && m.payload?.id === "chair-basic-smoke1"), false,
+    "a non-owner must not remove another user's furniture");
+
   a.send(JSON.stringify({ type: "furniture.remove", payload: { id: "chair-basic-smoke1" } }));
   const removed = await waitMsg(bMsgs, (m) => m.type === "furniture.removed" && m.payload?.id === "chair-basic-smoke1");
   assert.equal(removed.payload.id, "chair-basic-smoke1");
