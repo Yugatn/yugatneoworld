@@ -9,10 +9,9 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const port = Number(process.env.PORT || 8080);
 const clients = new Map();
 const rooms = new Map();
-/** roomId -> cinema pool state */
 const cinemas = new Map();
-/** roomId -> placed furniture objects */
 const furnitureByRoom = new Map();
+const keysByHost = new Map();
 const COLORS = ["#f1a6cf", "#a6e3f1", "#c7f1a6", "#f1d0a6", "#d0a6f1", "#a6f1d8"];
 
 function roomFor(id) {
@@ -33,6 +32,26 @@ function furnitureFor(roomId) {
   if (!list) { list = []; furnitureByRoom.set(roomId, list); }
   return list;
 }
+function keysFor(hostId) {
+  let list = keysByHost.get(hostId);
+  if (!list) { list = []; keysByHost.set(hostId, list); }
+  return list;
+}
+function purgeHostKeys(hostId, now = Date.now()) {
+  const list = keysFor(hostId).filter((k) => k.expiresAt > now);
+  keysByHost.set(hostId, list);
+  return list;
+}
+function findValidKey(hostId, guestId, now = Date.now()) {
+  return purgeHostKeys(hostId, now).find((k) => k.guestId === guestId && k.expiresAt > now) || null;
+}
+function publicKey(k) {
+  return {
+    id: k.id, hostId: k.hostId, guestId: k.guestId,
+    hostName: k.hostName, guestName: k.guestName,
+    permissions: [...k.permissions], grantedAt: k.grantedAt, expiresAt: k.expiresAt
+  };
+}
 function sanitizeFurniture(obj) {
   if (!obj || typeof obj !== "object") return null;
   const id = String(obj.id || "").slice(0, 64);
@@ -43,7 +62,7 @@ function sanitizeFurniture(obj) {
     type: String(obj.type || "furniture").slice(0, 24),
     subtype: String(obj.subtype || "").slice(0, 24),
     name: String(obj.name || "Item").slice(0, 32),
-    label: String(obj.label || "◈").slice(0, 8),
+    label: String(obj.label || "\u25C8").slice(0, 8),
     x: Math.max(0, Math.min(4000, Number(obj.x) || 0)),
     y: Math.max(0, Math.min(3000, Number(obj.y) || 0)),
     r: Math.max(16, Math.min(80, Number(obj.r) || 36)),
@@ -136,7 +155,11 @@ wss.on("connection", (socket) => {
         const prev = roomFor(peer.roomId);
         prev.delete(id);
         broadcast(prev, JSON.stringify({ type: "user.left", payload: { id } }));
-        if (!prev.size) { rooms.delete(peer.roomId); cinemas.delete(peer.roomId); furnitureByRoom.delete(peer.roomId); }
+        if (!prev.size) {
+          rooms.delete(peer.roomId);
+          cinemas.delete(peer.roomId);
+          furnitureByRoom.delete(peer.roomId);
+        }
       }
       peer.roomId = roomId;
       peer.x = Number.isFinite(Number(payload.x)) ? Number(payload.x) : 180;
@@ -198,15 +221,19 @@ wss.on("connection", (socket) => {
         send(socket, "visit.denied", { reason: "offline", targetId: payload.targetId });
         return;
       }
-      if (target.doorOpen === false) {
+      const key = findValidKey(target.id, id);
+      const viaKey = Boolean(key);
+      if (target.doorOpen === false && !viaKey) {
         send(socket, "visit.denied", { reason: "closed", targetId: target.id, name: target.profile.name });
         return;
       }
       send(target.socket, "visit.incoming", {
-        fromId: id, name: peer.profile.name, roomId: peer.roomId
+        fromId: id, name: peer.profile.name, roomId: peer.roomId, viaKey, key: viaKey ? publicKey(key) : null
       });
       send(socket, "visit.granted", {
-        targetId: target.id, name: target.profile.name, roomId: target.roomId
+        targetId: target.id, name: target.profile.name, roomId: target.roomId,
+        viaKey, permissions: viaKey ? key.permissions : ["visit"],
+        key: viaKey ? publicKey(key) : null
       });
       return;
     }
@@ -220,6 +247,66 @@ wss.on("connection", (socket) => {
         doorOpen: target.doorOpen !== false,
         roomId: target.roomId
       });
+      return;
+    }
+    if (type === "key.grant") {
+      const target = room.get(String(payload.targetId));
+      if (!target) {
+        send(socket, "key.error", { reason: "offline", targetId: payload.targetId });
+        return;
+      }
+      if (target.id === id) {
+        send(socket, "key.error", { reason: "self" });
+        return;
+      }
+      const hours = Math.max(1, Math.min(168, Number(payload.durationHours) || 1));
+      const durationMs = hours * 60 * 60 * 1000;
+      const perms = Array.isArray(payload.permissions) ? payload.permissions : ["visit", "media", "games"];
+      const allowed = new Set(["visit", "media", "games"]);
+      const permissions = perms.map(String).filter((p) => allowed.has(p));
+      if (!permissions.includes("visit")) permissions.unshift("visit");
+      const now = Date.now();
+      const key = {
+        id: "key_" + id.slice(0, 8) + "_" + target.id.slice(0, 8) + "_" + now.toString(36),
+        hostId: id,
+        guestId: target.id,
+        hostName: peer.profile.name,
+        guestName: target.profile.name,
+        permissions: [...new Set(permissions)],
+        grantedAt: now,
+        expiresAt: now + durationMs
+      };
+      const list = purgeHostKeys(id, now).filter((k) => k.guestId !== target.id);
+      list.push(key);
+      keysByHost.set(id, list);
+      send(socket, "key.granted", { key: publicKey(key), role: "host" });
+      send(target.socket, "key.granted", { key: publicKey(key), role: "guest" });
+      return;
+    }
+    if (type === "key.revoke") {
+      const keyId = String(payload.keyId || "");
+      const list = keysFor(id);
+      const found = list.find((k) => k.id === keyId);
+      if (!found) {
+        send(socket, "key.error", { reason: "not_found" });
+        return;
+      }
+      keysByHost.set(id, list.filter((k) => k.id !== keyId));
+      send(socket, "key.revoked", { keyId, guestId: found.guestId });
+      const guest = room.get(found.guestId);
+      if (guest) send(guest.socket, "key.revoked", { keyId, hostId: id, hostName: peer.profile.name });
+      return;
+    }
+    if (type === "key.list") {
+      const now = Date.now();
+      const granted = purgeHostKeys(id, now).map(publicKey);
+      const received = [];
+      for (const [hostId, list] of keysByHost) {
+        for (const k of list) {
+          if (k.guestId === id && k.expiresAt > now) received.push(publicKey(k));
+        }
+      }
+      send(socket, "key.list", { granted, received });
       return;
     }
     if (type === "cinema.contribute") {
@@ -317,8 +404,13 @@ wss.on("connection", (socket) => {
       const room = roomFor(peer.roomId);
       room.delete(id);
       broadcast(room, JSON.stringify({ type: "user.left", payload: { id } }));
-      if (!room.size) { rooms.delete(peer.roomId); cinemas.delete(peer.roomId); furnitureByRoom.delete(peer.roomId); }
+      if (!room.size) {
+        rooms.delete(peer.roomId);
+        cinemas.delete(peer.roomId);
+        furnitureByRoom.delete(peer.roomId);
+      }
     }
+    keysByHost.delete(id);
     clients.delete(id);
   });
 });
