@@ -8,6 +8,8 @@ export const ROOMS = {
 export function createApartment() {
   return {
     currentRoom: "livingRoom",
+    /** When true, friends on the street can request a visit. */
+    doorOpen: true,
     rooms: Object.values(ROOMS).map((room) => ({ ...room, layoutVersion: 1 }))
   };
 }
@@ -16,4 +18,18 @@ export function enterRoom(apartment, roomId) {
   if (!ROOMS[roomId]) return false;
   apartment.currentRoom = roomId;
   return true;
+}
+
+export function setDoorOpen(apartment, open) {
+  apartment.doorOpen = Boolean(open);
+  return apartment.doorOpen;
+}
+
+export function isDoorOpen(apartment) {
+  return apartment?.doorOpen !== false;
+}
+
+/** Guests may only enter if the host door is open. */
+export function canAcceptVisit(apartment) {
+  return isDoorOpen(apartment);
 }
