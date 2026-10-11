@@ -115,6 +115,14 @@ const mime = {
   ".webmanifest": "application/manifest+json"
 };
 
+// Only expose browser entry points and browser runtime assets. Repository
+// metadata, tests, server code, and internal documentation are not web assets.
+const publicRootFiles = new Set(["index.html", "style.css", "manifest.webmanifest"]);
+function isPublicAsset(relativePath) {
+  if (publicRootFiles.has(relativePath)) return true;
+  return relativePath.startsWith("src/") && /\\.(?:js|html|css)$/.test(relativePath);
+}
+
 const server = http.createServer(async (req, res) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "no-referrer");
@@ -128,6 +136,8 @@ const server = http.createServer(async (req, res) => {
   try {
     const requestPath = decodeURIComponent((req.url || "/").split("?")[0]);
     if (!requestPath.startsWith("/") || requestPath.includes("\\0")) throw new Error("invalid path");
+    const relativePath = (requestPath === "/" ? "index.html" : requestPath.slice(1)).replaceAll("\\\\", "/");
+    if (!isPublicAsset(relativePath)) throw new Error("not a public asset");
     const file = resolve(root, "." + (requestPath === "/" ? "/index.html" : requestPath));
     if (file !== root && !file.startsWith(root + sep)) throw new Error("invalid path");
     const data = await readFile(file);
