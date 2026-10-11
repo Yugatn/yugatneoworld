@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node tests/domain.test.mjs && node tests/identity.test.mjs && node tests/social-cinema.test.mjs && node tests/keys.test.mjs && node tests/voice-commands.test.mjs && node tests/smart-home.test.mjs && node tests/avatar.test.mjs && node tests/commerce-recipes.test.mjs && node tests/realtime-protocol.test.mjs && node tests/ws-smoke.test.mjs",
+    "test": "node tests/session-registry.test.mjs && node tests/domain.test.mjs && node tests/identity.test.mjs && node tests/social-cinema.test.mjs && node tests/keys.test.mjs && node tests/voice-commands.test.mjs && node tests/smart-home.test.mjs && node tests/avatar.test.mjs && node tests/commerce-recipes.test.mjs && node tests/realtime-protocol.test.mjs && node tests/ws-smoke.test.mjs",
     "check": "node --check server/index.js && node --check src/boot.js && node --check src/main.js && npm test"
   },
   "dependencies": {
