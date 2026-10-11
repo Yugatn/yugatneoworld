@@ -2,6 +2,7 @@ import { WORLD_VERSION, createDefaultWorld } from "./world.js";
 import { createInventory } from "./inventory.js";
 import { createSmartHome } from "./smart-home.js";
 import { createAvatarState, toLegacyAppearance } from "./avatar.js";
+import { createOrderBook } from "./commerce.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -24,6 +25,11 @@ function ensureAvatarState(data) {
   return data;
 }
 
+function ensureCommerce(data) {
+  data.commerce = createOrderBook(data.commerce || {});
+  return data;
+}
+
 export function loadWorld(fallback = createDefaultWorld()) {
   try {
     const raw = localStorage.getItem(KEY);
@@ -32,6 +38,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (!fresh.inventory) fresh.inventory = createInventory();
       if (!fresh.smartHome) fresh.smartHome = createSmartHome();
       if (!fresh.avatarState) fresh.avatarState = createAvatarState();
+      if (!fresh.commerce) fresh.commerce = createOrderBook();
       return fresh;
     }
     const data = JSON.parse(raw);
@@ -40,9 +47,9 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (!fresh.inventory) fresh.inventory = createInventory();
       if (!fresh.smartHome) fresh.smartHome = createSmartHome();
       if (!fresh.avatarState) fresh.avatarState = createAvatarState();
+      if (!fresh.commerce) fresh.commerce = createOrderBook();
       return fresh;
     }
-    // Version mismatch: keep avatar position, rebuild objects/rooms from defaults.
     if (data.version !== WORLD_VERSION) {
       const fresh = structuredClone(fallback);
       fresh.avatar = {
@@ -51,13 +58,16 @@ export function loadWorld(fallback = createDefaultWorld()) {
         y: data.avatar.y,
         appearance: data.avatar.appearance || fresh.avatar.appearance
       };
-      if (data.apartment?.currentRoom) {
-        fresh.apartment.currentRoom = data.apartment.currentRoom;
+      if (data.apartment?.currentRoom && fresh.apartment) {
+        // Keep room only if still valid in new map
+        const roomIds = (fresh.apartment.rooms || []).map((r) => r.id);
+        if (roomIds.includes(data.apartment.currentRoom)) {
+          fresh.apartment.currentRoom = data.apartment.currentRoom;
+        }
       }
       if (data.apartment && typeof data.apartment.doorOpen === "boolean") {
         fresh.apartment.doorOpen = data.apartment.doorOpen;
       }
-      // Preserve placed furniture (movable objects) across version bumps when possible.
       const movable = (data.objects || []).filter((o) => o.movable && o.inventoryItemId);
       if (movable.length) {
         fresh.objects = fresh.objects.concat(movable);
@@ -73,6 +83,9 @@ export function loadWorld(fallback = createDefaultWorld()) {
         fresh.avatarState = createAvatarState(data.avatarState);
         fresh.avatar.appearance = toLegacyAppearance(fresh.avatarState);
       }
+      if (data.commerce) {
+        fresh.commerce = createOrderBook(data.commerce);
+      }
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
@@ -80,12 +93,14 @@ export function loadWorld(fallback = createDefaultWorld()) {
     if (!data.smartHome) data.smartHome = createSmartHome();
     else data.smartHome = createSmartHome(data.smartHome);
     ensureAvatarState(data);
+    ensureCommerce(data);
     return data;
   } catch {
     const fresh = structuredClone(fallback);
     if (!fresh.inventory) fresh.inventory = createInventory();
     if (!fresh.smartHome) fresh.smartHome = createSmartHome();
     if (!fresh.avatarState) fresh.avatarState = createAvatarState();
+    if (!fresh.commerce) fresh.commerce = createOrderBook();
     return fresh;
   }
 }
