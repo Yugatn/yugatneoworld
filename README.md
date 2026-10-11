@@ -8,10 +8,18 @@ A social network designed as a navigable 2D world rather than a conventional pro
 - Stable `subjectId` stored in the browser; no server password or OAuth in v0.1.
 - Multiplayer display name follows the active session.
 
+## Smart Home (digital 2D copy)
+
+- Per-room **lights** (on/off, brightness), **climate** (mode + target °C), **TV** and **music** power.
+- State on `world.smartHome`, persisted with the apartment (world version 5).
+- Interactables: light switches, thermostat; TV / music player capabilities.
+- Voice: «умный дом», «включи свет», «теплее», «телевизор», «музыка».
+- See `docs/SMART_HOME_V0.1.md`.
+
 ## Voice commands
 
 - **🎙** button or **V** key: speech commands (ru/en).
-- Door open/close, street, home, inventory, multiplayer, emotes, help.
+- Door open/close, street, home, inventory, multiplayer, emotes, **smart home**, help.
 - Needs browser SpeechRecognition (Chrome/Edge; mic permission).
 
 ## Temporary keys
@@ -38,7 +46,7 @@ A social network designed as a navigable 2D world rather than a conventional pro
 - **E** in empty space → Inventory / furniture → place chair, plant, table, lamp near the avatar.
 - Interact with placed furniture → pick up back to inventory.
 - In an online room, placement is broadcast (`furniture.place` / `furniture.remove`); snapshot includes the room list.
-- Local inventory still persists in localStorage (world version 4).
+- Local inventory still persists in localStorage (world version 4+).
 
 ## Run locally
 
@@ -58,9 +66,9 @@ Controls: WASD / drag / joystick · **E** interact · **V** voice · **Esc** clo
 
 ## Status
 
-v0.9.0 — spatial loop + employment + realtime + mobile + furniture sync + accounts + visits/streets/cinema + temporary keys + **voice commands**.
+v0.10.0 — spatial loop + employment + realtime + mobile + furniture sync + accounts + visits/streets/cinema + temporary keys + voice commands + **smart home (digital 2D apartment copy)**.
 
-Still boundaries: server auth, real film streaming, persistent keys across restarts, PIN.
+Still boundaries: server auth, real film streaming, persistent keys across restarts, PIN, real IoT bridge.
 
 ## Author
 
