@@ -28,6 +28,15 @@ assert.equal(matchVoiceCommand("холоднее").id, "climate.cooler");
 assert.equal(matchVoiceCommand("телевизор").id, "tv.toggle");
 assert.equal(matchVoiceCommand("музыка").id, "music.toggle");
 
+// Avatar
+assert.equal(matchVoiceCommand("wardrobe").id, "avatar.wardrobe");
+assert.equal(matchVoiceCommand("одежда").id, "avatar.wardrobe");
+assert.equal(matchVoiceCommand("шкаф").id, "avatar.wardrobe");
+assert.equal(matchVoiceCommand("appearance").id, "avatar.appearance");
+assert.equal(matchVoiceCommand("внешность").id, "avatar.appearance");
+assert.equal(matchVoiceCommand("shave").id, "avatar.shave");
+assert.equal(matchVoiceCommand("побриться").id, "avatar.shave");
+
 assert.ok(listVoiceHelp().length >= VOICE_COMMANDS.length - 1);
 assert.equal(speechRecognitionSupported(), false);
 
