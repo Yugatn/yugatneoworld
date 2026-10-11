@@ -69,7 +69,10 @@ function sanitizeFurniture(obj) {
     x: Math.max(0, Math.min(4000, Number(obj.x) || 0)),
     y: Math.max(0, Math.min(3000, Number(obj.y) || 0)),
     r: Math.max(16, Math.min(80, Number(obj.r) || 36)),
-    capabilities: Array.isArray(obj.capabilities) ? obj.capabilities.slice(0, 8).map(String) : ["furniture.pick"],
+    // Capabilities are server-owned policy labels, never arbitrary client input.
+    capabilities: Array.isArray(obj.capabilities)
+      ? [...new Set(obj.capabilities.map(String).filter((cap) => cap === "furniture.pick"))]
+      : ["furniture.pick"],
     inventoryItemId: String(obj.inventoryItemId || "").slice(0, 32) || null,
     movable: true,
     ownerId: obj.ownerId ? String(obj.ownerId).slice(0, 64) : null
@@ -394,7 +397,9 @@ wss.on("connection", (socket) => {
       return;
     }
     if (type === "furniture.place") {
-      const obj = sanitizeFurniture({ ...payload, ownerId: id });
+      // Room membership and ownership come from the authenticated connection
+      // context, not from client-supplied furniture fields.
+      const obj = sanitizeFurniture({ ...payload, roomId: peer.roomId, ownerId: id });
       if (!obj) return;
       const list = furnitureFor(peer.roomId);
       if (list.some((o) => o.id === obj.id)) return;
