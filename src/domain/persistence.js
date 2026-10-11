@@ -1,5 +1,6 @@
 import { WORLD_VERSION, createDefaultWorld } from "./world.js";
 import { createInventory } from "./inventory.js";
+import { createSmartHome } from "./smart-home.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -18,12 +19,14 @@ export function loadWorld(fallback = createDefaultWorld()) {
     if (!raw) {
       const fresh = structuredClone(fallback);
       if (!fresh.inventory) fresh.inventory = createInventory();
+      if (!fresh.smartHome) fresh.smartHome = createSmartHome();
       return fresh;
     }
     const data = JSON.parse(raw);
     if (!isValidWorld(data)) {
       const fresh = structuredClone(fallback);
       if (!fresh.inventory) fresh.inventory = createInventory();
+      if (!fresh.smartHome) fresh.smartHome = createSmartHome();
       return fresh;
     }
     // Version mismatch: keep avatar position, rebuild objects/rooms from defaults.
@@ -38,6 +41,9 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.apartment?.currentRoom) {
         fresh.apartment.currentRoom = data.apartment.currentRoom;
       }
+      if (data.apartment && typeof data.apartment.doorOpen === "boolean") {
+        fresh.apartment.doorOpen = data.apartment.doorOpen;
+      }
       // Preserve placed furniture (movable objects) across version bumps when possible.
       const movable = (data.objects || []).filter((o) => o.movable && o.inventoryItemId);
       if (movable.length) {
@@ -47,14 +53,21 @@ export function loadWorld(fallback = createDefaultWorld()) {
       } else {
         fresh.inventory = data.inventory || createInventory();
       }
+      // Preserve smart-home digital copy if present
+      if (data.smartHome) {
+        fresh.smartHome = createSmartHome(data.smartHome);
+      }
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
     if (!Array.isArray(data.inventory)) data.inventory = createInventory();
+    if (!data.smartHome) data.smartHome = createSmartHome();
+    else data.smartHome = createSmartHome(data.smartHome);
     return data;
   } catch {
     const fresh = structuredClone(fallback);
     if (!fresh.inventory) fresh.inventory = createInventory();
+    if (!fresh.smartHome) fresh.smartHome = createSmartHome();
     return fresh;
   }
 }
