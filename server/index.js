@@ -11,6 +11,8 @@ const clients = new Map();
 const rooms = new Map();
 /** roomId -> cinema pool state */
 const cinemas = new Map();
+/** roomId -> placed furniture objects */
+const furnitureByRoom = new Map();
 const COLORS = ["#f1a6cf", "#a6e3f1", "#c7f1a6", "#f1d0a6", "#d0a6f1", "#a6f1d8"];
 
 function roomFor(id) {
@@ -25,6 +27,31 @@ function cinemaFor(roomId) {
     cinemas.set(roomId, c);
   }
   return c;
+}
+function furnitureFor(roomId) {
+  let list = furnitureByRoom.get(roomId);
+  if (!list) { list = []; furnitureByRoom.set(roomId, list); }
+  return list;
+}
+function sanitizeFurniture(obj) {
+  if (!obj || typeof obj !== "object") return null;
+  const id = String(obj.id || "").slice(0, 64);
+  if (!id) return null;
+  return {
+    id,
+    roomId: String(obj.roomId || "livingRoom").slice(0, 32),
+    type: String(obj.type || "furniture").slice(0, 24),
+    subtype: String(obj.subtype || "").slice(0, 24),
+    name: String(obj.name || "Item").slice(0, 32),
+    label: String(obj.label || "◈").slice(0, 8),
+    x: Math.max(0, Math.min(4000, Number(obj.x) || 0)),
+    y: Math.max(0, Math.min(3000, Number(obj.y) || 0)),
+    r: Math.max(16, Math.min(80, Number(obj.r) || 36)),
+    capabilities: Array.isArray(obj.capabilities) ? obj.capabilities.slice(0, 8).map(String) : ["furniture.pick"],
+    inventoryItemId: String(obj.inventoryItemId || "").slice(0, 32) || null,
+    movable: true,
+    ownerId: obj.ownerId ? String(obj.ownerId).slice(0, 64) : null
+  };
 }
 function send(socket, type, payload = {}) {
   if (socket.readyState === 1) socket.send(JSON.stringify({ type, payload, ts: Date.now() }));
@@ -109,7 +136,7 @@ wss.on("connection", (socket) => {
         const prev = roomFor(peer.roomId);
         prev.delete(id);
         broadcast(prev, JSON.stringify({ type: "user.left", payload: { id } }));
-        if (!prev.size) { rooms.delete(peer.roomId); cinemas.delete(peer.roomId); }
+        if (!prev.size) { rooms.delete(peer.roomId); cinemas.delete(peer.roomId); furnitureByRoom.delete(peer.roomId); }
       }
       peer.roomId = roomId;
       peer.x = Number.isFinite(Number(payload.x)) ? Number(payload.x) : 180;
@@ -127,7 +154,8 @@ wss.on("connection", (socket) => {
         roomId,
         users: [...room.values()].map(publicPeer),
         self: publicPeer(peer),
-        cinema: cinemaPublic(cinemaFor(roomId))
+        cinema: cinemaPublic(cinemaFor(roomId)),
+        furniture: furnitureFor(roomId).map((o) => ({ ...o }))
       });
       room.set(id, peer);
       broadcast(room, JSON.stringify({ type: "user.joined", payload: publicPeer(peer) }), id);
@@ -223,6 +251,30 @@ wss.on("connection", (socket) => {
       send(socket, "cinema.state", cinemaPublic(c));
       return;
     }
+    if (type === "furniture.place") {
+      const obj = sanitizeFurniture({ ...payload, ownerId: id });
+      if (!obj) return;
+      const list = furnitureFor(peer.roomId);
+      if (list.some((o) => o.id === obj.id)) return;
+      if (list.length >= 40) return;
+      list.push(obj);
+      const msg = JSON.stringify({ type: "furniture.placed", payload: obj });
+      broadcast(room, msg);
+      send(socket, "furniture.placed", obj);
+      return;
+    }
+    if (type === "furniture.remove") {
+      const fid = String(payload.id || "").slice(0, 64);
+      if (!fid) return;
+      const list = furnitureFor(peer.roomId);
+      const idx = list.findIndex((o) => o.id === fid);
+      if (idx < 0) return;
+      list.splice(idx, 1);
+      const msg = JSON.stringify({ type: "furniture.removed", payload: { id: fid, by: id } });
+      broadcast(room, msg);
+      send(socket, "furniture.removed", { id: fid, by: id });
+      return;
+    }
     if (type === "chat.message") {
       const now = Date.now();
       if (now - peer.lastChatAt < 800) return;
@@ -265,7 +317,7 @@ wss.on("connection", (socket) => {
       const room = roomFor(peer.roomId);
       room.delete(id);
       broadcast(room, JSON.stringify({ type: "user.left", payload: { id } }));
-      if (!room.size) { rooms.delete(peer.roomId); cinemas.delete(peer.roomId); }
+      if (!room.size) { rooms.delete(peer.roomId); cinemas.delete(peer.roomId); furnitureByRoom.delete(peer.roomId); }
     }
     clients.delete(id);
   });
