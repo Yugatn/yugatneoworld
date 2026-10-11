@@ -8,7 +8,9 @@ export class RealtimeWorld {
     this.socket = null;
     this.id = null;
     this.color = null;
+    this.doorOpen = true;
     this.users = new Map();
+    this.cinema = null;
     this.listeners = new Set();
     this._reconnectAttempts = 0;
     this._reconnectTimer = null;
@@ -39,7 +41,7 @@ export class RealtimeWorld {
       this._reconnectAttempts = 0;
       this.send("room.join", {
         roomId: this.roomId, x: this._lastPosition.x, y: this._lastPosition.y,
-        scene: this._lastPosition.scene, profile: this.profile
+        scene: this._lastPosition.scene, profile: this.profile, doorOpen: this.doorOpen
       });
       this.emit({ type: "realtime.status", status: "online" });
     });
@@ -75,6 +77,14 @@ export class RealtimeWorld {
     this._lastPosition = { x, y, scene };
     this.send("scene.change", { scene, x, y });
   }
+  setDoorOpen(open) {
+    this.doorOpen = Boolean(open);
+    this.send("apartment.door", { open: this.doorOpen });
+  }
+  requestVisit(targetId) { this.send("visit.request", { targetId }); }
+  addFriend(targetId) { this.send("friend.add", { targetId }); }
+  cinemaContribute(amount, filmId) { this.send("cinema.contribute", { amount, filmId }); }
+  cinemaJoin() { this.send("cinema.join", {}); }
   chat(text) { this.send("chat.message", { text }); }
   emote(emote) { this.send("emote.play", { emote }); }
   invite(targetId) { this.send("presence.invite", { targetId }); }
@@ -84,7 +94,7 @@ export class RealtimeWorld {
     this._lastPosition = position;
     this.send("room.join", {
       roomId, x: position.x, y: position.y,
-      scene: position.scene || "apartment", profile: this.profile
+      scene: position.scene || "apartment", profile: this.profile, doorOpen: this.doorOpen
     });
   }
   handle(message) {
@@ -94,6 +104,8 @@ export class RealtimeWorld {
       this.users.clear();
       for (const user of payload.users || []) this.users.set(user.id, user);
       if (payload.self?.color) this.color = payload.self.color;
+      if (payload.self?.doorOpen != null) this.doorOpen = payload.self.doorOpen;
+      if (payload.cinema) this.cinema = payload.cinema;
     }
     if (type === "user.joined") this.users.set(payload.id, payload);
     if (type === "user.left") this.users.delete(payload.id);
@@ -109,6 +121,14 @@ export class RealtimeWorld {
     if (type === "scene.change") {
       const user = this.users.get(payload.id);
       if (user) Object.assign(user, { scene: payload.scene, x: payload.x, y: payload.y });
+    }
+    if (type === "apartment.door") {
+      const user = this.users.get(payload.id);
+      if (user) user.doorOpen = payload.open;
+      if (payload.id === this.id) this.doorOpen = payload.open;
+    }
+    if (type === "cinema.state" || type === "cinema.activated") {
+      this.cinema = payload;
     }
     this.emit(message);
   }
