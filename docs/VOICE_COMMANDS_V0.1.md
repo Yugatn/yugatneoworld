@@ -27,12 +27,19 @@ Command matching accepts both Russian and English phrases.
 | Account | account, аккаунт |
 | Save | save, сохранить |
 | Emotes | wave / heart / clap / think / hello |
+| Smart home panel | smart home, умный дом |
+| Lights on / off | lights on, включи свет / lights off, выключи свет |
+| Toggle light | toggle light, свет |
+| Warmer / Cooler | warmer, теплее / cooler, холоднее |
+| Toggle TV | tv, телевизор |
+| Toggle music | music, музыка |
 | Help | help, помощь, команды |
 
 ## Architecture
 
 - `src/domain/voice-commands.js` — pure transcript → action id matching (tested in Node)
-- `src/app.js` — SpeechRecognition wiring and `runVoiceCommand`
+- `src/integration/voice-ui.js` — SpeechRecognition wiring and `runVoiceCommand`
+- Smart-home actions call into `world.smartHome` via the voice API (`docs/SMART_HOME_V0.1.md`)
 
 ## Not in v0.1
 
