@@ -1,6 +1,7 @@
 import { WORLD_VERSION, createDefaultWorld } from "./world.js";
 import { createInventory } from "./inventory.js";
 import { createSmartHome } from "./smart-home.js";
+import { createAvatarState, toLegacyAppearance } from "./avatar.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -13,6 +14,16 @@ function isValidWorld(data) {
     && Array.isArray(data.objects);
 }
 
+function ensureAvatarState(data) {
+  if (data.avatarState) {
+    data.avatarState = createAvatarState(data.avatarState);
+  } else {
+    data.avatarState = createAvatarState();
+  }
+  data.avatar.appearance = toLegacyAppearance(data.avatarState);
+  return data;
+}
+
 export function loadWorld(fallback = createDefaultWorld()) {
   try {
     const raw = localStorage.getItem(KEY);
@@ -20,6 +31,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       const fresh = structuredClone(fallback);
       if (!fresh.inventory) fresh.inventory = createInventory();
       if (!fresh.smartHome) fresh.smartHome = createSmartHome();
+      if (!fresh.avatarState) fresh.avatarState = createAvatarState();
       return fresh;
     }
     const data = JSON.parse(raw);
@@ -27,6 +39,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       const fresh = structuredClone(fallback);
       if (!fresh.inventory) fresh.inventory = createInventory();
       if (!fresh.smartHome) fresh.smartHome = createSmartHome();
+      if (!fresh.avatarState) fresh.avatarState = createAvatarState();
       return fresh;
     }
     // Version mismatch: keep avatar position, rebuild objects/rooms from defaults.
@@ -53,9 +66,12 @@ export function loadWorld(fallback = createDefaultWorld()) {
       } else {
         fresh.inventory = data.inventory || createInventory();
       }
-      // Preserve smart-home digital copy if present
       if (data.smartHome) {
         fresh.smartHome = createSmartHome(data.smartHome);
+      }
+      if (data.avatarState) {
+        fresh.avatarState = createAvatarState(data.avatarState);
+        fresh.avatar.appearance = toLegacyAppearance(fresh.avatarState);
       }
       return fresh;
     }
@@ -63,17 +79,23 @@ export function loadWorld(fallback = createDefaultWorld()) {
     if (!Array.isArray(data.inventory)) data.inventory = createInventory();
     if (!data.smartHome) data.smartHome = createSmartHome();
     else data.smartHome = createSmartHome(data.smartHome);
+    ensureAvatarState(data);
     return data;
   } catch {
     const fresh = structuredClone(fallback);
     if (!fresh.inventory) fresh.inventory = createInventory();
     if (!fresh.smartHome) fresh.smartHome = createSmartHome();
+    if (!fresh.avatarState) fresh.avatarState = createAvatarState();
     return fresh;
   }
 }
 
 export function saveWorld(world) {
   try {
+    if (world.avatarState) {
+      world.avatar = world.avatar || {};
+      world.avatar.appearance = toLegacyAppearance(world.avatarState);
+    }
     localStorage.setItem(KEY, JSON.stringify(world));
     return true;
   } catch {
