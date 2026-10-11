@@ -13,13 +13,16 @@ import {
   createSmartHome, toggleLight, setAllLights, adjustTemp, toggleTv, toggleMusic,
   summarize as summarizeSmartHome, listDevices, roomLightFactor
 } from "./domain/smart-home.js";
+import {
+  createAvatarState, equip, listWardrobe, summarizeAvatar, shaveAtHome,
+  haircutAtBarber, getEffectiveAppearance, toLegacyAppearance, CLOTHING_CATALOG
+} from "./domain/avatar.js";
 import { EugeneMessengerAdapter } from "./integration/eugene.js";
 import { SymbiontEventAdapter } from "./integration/symbiont.js";
 import { createEvent } from "./integration/event-envelope.js";
 import { RealtimeWorld } from "./integration/realtime.js";
 
-// NOTE: Full UI implementation is in the local workspace artifact app.js.voice.
-// This file provides voice + smart-home wiring + protocol markers; restore full body from commit d3747f6 + voice/smart-home patch if canvas is blank.
+// NOTE: Full spatial UI body still pending restore; this file wires domain APIs + protocol markers.
 
 function setBubble() {}
 function showToast(t) {
@@ -38,9 +41,17 @@ void buildStreetPlaces;
 void distance;
 void roomLightFactor;
 void listDevices;
+void haircutAtBarber;
+void CLOTHING_CATALOG;
 
 let world = typeof localStorage !== "undefined" ? loadWorld() : createDefaultWorld();
 if (!world.smartHome) world.smartHome = createSmartHome();
+if (!world.avatarState) world.avatarState = createAvatarState();
+
+function syncAppearance() {
+  world.avatar = world.avatar || {};
+  world.avatar.appearance = toLegacyAppearance(world.avatarState);
+}
 
 function openSmartHome() {
   const lines = listDevices(world.smartHome, world.apartment?.currentRoom || "livingRoom")
@@ -78,6 +89,28 @@ function smartHomeToggleTv() {
 function smartHomeToggleMusic() {
   const on = toggleMusic(world.smartHome);
   showToast(on ? "Music on" : "Music off");
+  try { saveWorld(world); } catch {}
+}
+
+function openWardrobe() {
+  const by = listWardrobe(world.avatarState);
+  const lines = [];
+  for (const slot of ["top", "bottom", "shoes", "accessory"]) {
+    const items = by[slot] || [];
+    if (!items.length) continue;
+    lines.push(slot + ": " + items.map((i) => (i.equipped ? "[" + i.name + "]" : i.name)).join(", "));
+  }
+  show("👗 Wardrobe", lines.join(" · ") || "Empty wardrobe", [["Close", () => closePanel()]]);
+}
+
+function showAppearance() {
+  show("🪞 Appearance", summarizeAvatar(world.avatarState), [["Close", () => closePanel()]]);
+}
+
+function doShave() {
+  const r = shaveAtHome(world.avatarState);
+  syncAppearance();
+  showToast(r.message);
   try { saveWorld(world); } catch {}
 }
 
@@ -120,11 +153,16 @@ const voiceApi = {
   smartHomeToggleLight,
   smartHomeAdjustTemp,
   smartHomeToggleTv,
-  smartHomeToggleMusic
+  smartHomeToggleMusic,
+  openWardrobe,
+  showAppearance,
+  doShave
 };
 const { startVoice, runVoiceCommand } = attachVoice(voiceApi);
 void startVoice;
 void runVoiceCommand;
+void equip;
+void getEffectiveAppearance;
 
 const statusEl = document.querySelector("#status");
-if (statusEl) statusEl.textContent = "Voice + Smart Home ready";
+if (statusEl) statusEl.textContent = "Voice + Smart Home + Avatar ready";
