@@ -49,6 +49,18 @@ try {
     new Promise((r, j) => { b.once("open", r); b.once("error", j); })
   ]);
 
+  const bounds = new WebSocket(`ws://127.0.0.1:${port}`);
+  const boundsMsgs = track(bounds);
+  await new Promise((r, j) => { bounds.once("open", r); bounds.once("error", j); });
+  bounds.send(JSON.stringify({
+    type: "room.join",
+    payload: { roomId: "test:bounds", x: 999999, y: -100, profile: { name: "Bounds" } }
+  }));
+  const boundsSnapshot = await waitMsg(boundsMsgs, (m) => m.type === "room.snapshot");
+  assert.equal(boundsSnapshot.payload.self.x, 4000, "join X must be clamped");
+  assert.equal(boundsSnapshot.payload.self.y, 40, "join Y must be clamped");
+  bounds.close();
+
   a.send(JSON.stringify({
     type: "room.join",
     payload: { roomId: "test:smoke", x: 100, y: 100, profile: { name: "Alice" } }
