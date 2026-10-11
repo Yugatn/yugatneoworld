@@ -1,6 +1,6 @@
 import { getStreetTier, listVisitableFriends } from "./social.js";
 
-export const CITY_VERSION = "0.2";
+export const CITY_VERSION = "0.3";
 
 const basePlaces = [
   { id: "company-symbiont", type: "employer", name: "Symbiont Network", x: 220, y: 190, description: "Technology and social infrastructure.", jobs: ["job-1", "job-3"] },
@@ -9,6 +9,7 @@ const basePlaces = [
   { id: "coworking", type: "coworking", name: "City Coworking", x: 220, y: 450, description: "Flexible work space.", jobs: [] },
   { id: "gym", type: "service", name: "Fitness Center", x: 520, y: 450, description: "Health and physical activity.", jobs: [] },
   { id: "yoga", type: "service", name: "Yoga Center", x: 820, y: 450, description: "Movement and recovery.", jobs: [] },
+  { id: "barbershop", type: "service", name: "Barbershop", x: 150, y: 320, description: "Haircut and style. Permanent change + temporary wet hair / new cut look.", jobs: [], capabilities: ["avatar.haircut"] },
   { id: "cinema", type: "cinema", name: "Street Cinema", x: 520, y: 320, description: "Pool credits with friends to unlock a screening. Co-watching is cheaper.", jobs: [] }
 ];
 
