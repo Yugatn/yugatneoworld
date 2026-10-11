@@ -28,5 +28,7 @@ assert.ok(app.includes("openGrantKey") && app.includes("mergeRemoteFurniture"));
 assert.ok(boot.includes("app.js"));
 const voice = readFileSync(new URL("../src/domain/voice-commands.js", import.meta.url), "utf8");
 assert.ok(voice.includes("matchVoiceCommand") && voice.includes("door.open"));
-assert.ok(app.includes("startVoice") && app.includes("runVoiceCommand"));
+const voiceUi = readFileSync(new URL("../src/integration/voice-ui.js", import.meta.url), "utf8");
+assert.ok(voiceUi.includes("startVoice") && voiceUi.includes("runVoiceCommand") && voiceUi.includes("attachVoice"));
+assert.ok(app.includes("attachVoice") || (app.includes("startVoice") && app.includes("runVoiceCommand")), "app must wire voice (attachVoice or startVoice)");
 console.log("realtime/mobile protocol tests OK");
