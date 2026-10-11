@@ -65,8 +65,17 @@ export function runVoiceCommand(id, api) {
     case "music.toggle":
       api.smartHomeToggleMusic?.();
       break;
+    case "avatar.wardrobe":
+      api.openWardrobe?.();
+      break;
+    case "avatar.appearance":
+      api.showAppearance?.();
+      break;
+    case "avatar.shave":
+      api.doShave?.();
+      break;
     case "help":
-      api.show("\ud83c\udf99 Voice commands", listVoiceHelp().slice(0, 12).join(". ") + ".", [
+      api.show("\ud83c\udf99 Voice commands", listVoiceHelp().slice(0, 14).join(". ") + ".", [
         ["Close", () => api.closePanel?.()]
       ]);
       break;
