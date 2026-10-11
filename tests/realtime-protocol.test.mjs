@@ -33,7 +33,12 @@ assert.ok(appSrc.includes("openGrantKey") && appSrc.includes("mergeRemoteFurnitu
 assert.ok(boot.includes("app.js"));
 const voice = readFileSync(join(root, "src/domain/voice-commands.js"), "utf8");
 assert.ok(voice.includes("matchVoiceCommand") && voice.includes("door.open"));
+assert.ok(voice.includes("smarthome.panel") && voice.includes("lights.on"));
 const voiceUi = readFileSync(join(root, "src/integration/voice-ui.js"), "utf8");
 assert.ok(voiceUi.includes("startVoice") && voiceUi.includes("runVoiceCommand") && voiceUi.includes("attachVoice"));
+assert.ok(voiceUi.includes("openSmartHome") || voiceUi.includes("smartHomeLights"));
 assert.ok(appSrc.includes("attachVoice") || (appSrc.includes("startVoice") && appSrc.includes("runVoiceCommand")), "app must wire voice (attachVoice or startVoice)");
+const smartHome = readFileSync(join(root, "src/domain/smart-home.js"), "utf8");
+assert.ok(smartHome.includes("createSmartHome") && smartHome.includes("roomLightFactor"));
+assert.ok(appSrc.includes("openSmartHome") && appSrc.includes("smartHome"));
 console.log("realtime/mobile protocol tests OK");
