@@ -21,6 +21,15 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "emote.clap", label: "Clap", aliases: ["clap", "applaud", "хлопай", "аплодисменты"] },
   { id: "emote.think", label: "Think", aliases: ["think", "hmm", "подумай", "думаю"] },
   { id: "emote.hello", label: "Hello", aliases: ["hello", "hi", "hello chat", "приветствие"] },
+  // Smart home — digital 2D apartment copy
+  { id: "smarthome.panel", label: "Smart home", aliases: ["smart home", "smarthome", "умный дом", "умныйдом", "home control", "управление домом"] },
+  { id: "lights.on", label: "Lights on", aliases: ["lights on", "turn on lights", "включи свет", "свет включить", "включи освещение", "turn the lights on"] },
+  { id: "lights.off", label: "Lights off", aliases: ["lights off", "turn off lights", "выключи свет", "свет выключить", "выключи освещение", "turn the lights off"] },
+  { id: "light.toggle", label: "Toggle light", aliases: ["toggle light", "light", "switch light", "переключи свет", "свет"] },
+  { id: "climate.warmer", label: "Warmer", aliases: ["warmer", "heat up", "теплее", "потеплее", "увеличь температуру"] },
+  { id: "climate.cooler", label: "Cooler", aliases: ["cooler", "colder", "холоднее", "похолоднее", "уменьши температуру"] },
+  { id: "tv.toggle", label: "Toggle TV", aliases: ["tv", "television", "toggle tv", "turn on tv", "turn off tv", "телевизор", "включи телевизор", "выключи телевизор"] },
+  { id: "music.toggle", label: "Toggle music", aliases: ["music", "toggle music", "play music", "stop music", "музыка", "включи музыку", "выключи музыку"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
