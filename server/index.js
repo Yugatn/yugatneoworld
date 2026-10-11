@@ -166,12 +166,27 @@ wss.on("connection", (socket) => {
     x: 180, y: 220, scene: "apartment",
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     doorOpen: true,
-    lastMoveAt: 0, lastChatAt: 0, lastEmoteAt: 0
+    lastMoveAt: 0, lastChatAt: 0, lastEmoteAt: 0,
+    messageTokens: 180,
+    messageTokenUpdatedAt: Date.now()
   };
   clients.set(id, peer);
   send(socket, "welcome", { id, color: peer.color });
 
   socket.on("message", (raw) => {
+    // Token bucket limits parser and dispatch work per connection. The burst
+    // accommodates initial room setup; sustained movement remains below the
+    // refill rate because avatar.move is separately throttled.
+    const now = Date.now();
+    const elapsedSeconds = Math.max(0, now - peer.messageTokenUpdatedAt) / 1000;
+    peer.messageTokens = Math.min(180, peer.messageTokens + elapsedSeconds * 60);
+    peer.messageTokenUpdatedAt = now;
+    if (peer.messageTokens < 1) {
+      socket.close(1008, "Message rate limit exceeded");
+      return;
+    }
+    peer.messageTokens -= 1;
+
     let message;
     try { message = JSON.parse(raw.toString()); } catch { return; }
     if (!message || typeof message !== "object" || Array.isArray(message)) return;
@@ -455,6 +470,13 @@ wss.on("connection", (socket) => {
       }
     }
     keysByHost.delete(id);
+    // Remove expired or disconnected guests from other hosts' transient key
+    // lists; no key should outlive its connection identity in this MVP.
+    for (const [hostId, list] of keysByHost) {
+      const remaining = list.filter((key) => key.guestId !== id && key.expiresAt > Date.now());
+      if (remaining.length) keysByHost.set(hostId, remaining);
+      else keysByHost.delete(hostId);
+    }
     clients.delete(id);
   });
 });
