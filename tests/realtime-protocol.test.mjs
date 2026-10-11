@@ -10,16 +10,18 @@ const app = readFileSync(new URL("../src/app.js", import.meta.url), "utf8");
 
 for (const token of [
   "room.join", "avatar.move", "chat.message", "profile.update", "scene.change",
-  "presence.invite", "emote.play", "apartment.door", "visit.request", "cinema.contribute"
+  "presence.invite", "emote.play", "apartment.door", "visit.request", "cinema.contribute", "furniture.place", "furniture.remove"
 ]) {
   assert.ok(server.includes(token), "server missing " + token);
 }
 assert.ok(realtime.includes("setDoorOpen") && realtime.includes("requestVisit") && realtime.includes("cinemaContribute"));
+assert.ok(realtime.includes("placeFurniture") && realtime.includes("removeFurniture"));
 assert.ok(index.includes("joystick") && index.includes("mp-panel"));
 assert.ok(index.includes("emote-row") && index.includes("toast"));
 assert.ok(index.includes("room-label") && index.includes("account-panel"));
 assert.ok(css.includes("safe-area-inset") && css.includes(".joystick") && css.includes(".toast"));
 assert.ok(app.includes("setBubble") && app.includes("showToast"));
 assert.ok(app.includes("openCinema") && app.includes("toggleDoor") && app.includes("buildStreetPlaces"));
+assert.ok(app.includes("mergeRemoteFurniture") && app.includes("placeFurniture"));
 assert.ok(boot.includes("app.js"));
 console.log("realtime/mobile protocol tests OK");

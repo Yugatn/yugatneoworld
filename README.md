@@ -26,6 +26,9 @@ A social network designed as a navigable 2D world rather than a conventional pro
 - **E** in empty space → Inventory / furniture → place chair, plant, table, lamp near the avatar.
 - Interact with placed furniture → pick up back to inventory.
 - Persists in localStorage (world version 4).
+- Furniture placed in a multiplayer room is shared with everyone in the room (place / pick sync via WebSocket).
+
+Still boundaries: server auth, real film streaming, PIN, persistent shared world storage.
 
 ## Run locally
 
@@ -45,9 +48,7 @@ Controls: WASD / drag / joystick · **E** interact · **Esc** close panel.
 
 ## Status
 
-Spatial loop + employment domain + realtime rooms/chat/presence/emotes + mobile controls + local furniture + local accounts + visits/streets/cinema pool.
-
-Still boundaries: server auth, real film streaming, shared furniture sync, PIN.
+Spatial loop + employment domain + realtime rooms/chat/presence/emotes + mobile controls + local & shared furniture + local accounts + visits/streets/cinema pool.
 
 ## Author
 
