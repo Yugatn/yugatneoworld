@@ -1,13 +1,20 @@
 import { createApartment } from "./apartment.js";
 import { createInventory } from "./inventory.js";
 import { createSmartHome } from "./smart-home.js";
+import { createAvatarState, toLegacyAppearance } from "./avatar.js";
 
-export const WORLD_VERSION = 5;
+export const WORLD_VERSION = 6;
 
 export function createDefaultWorld() {
+  const avatarState = createAvatarState();
   return {
     version: WORLD_VERSION,
-    avatar: { x: 180, y: 220, appearance: { body:"default", hair:"default", clothes:"casual" } },
+    avatar: {
+      x: 180,
+      y: 220,
+      appearance: toLegacyAppearance(avatarState)
+    },
+    avatarState,
     inventory: createInventory(),
     apartment: createApartment(),
     smartHome: createSmartHome(),
@@ -29,8 +36,9 @@ export function createDefaultWorld() {
       { id:"study-laptop",roomId:"study",type:"laptop",name:"Work Laptop",x:350,y:160,r:42,capabilities:["messenger","social","employment"] },
       { id:"study-books",roomId:"study",type:"books",name:"Bookshelf",x:720,y:160,r:42,capabilities:["books","education"] },
       { id:"study-switch",roomId:"study",type:"switch",name:"Study light",x:100,y:280,r:34,capabilities:["smarthome.lights"] },
-      { id:"wardrobe",roomId:"bedroom",type:"wardrobe",name:"Wardrobe",x:300,y:160,r:45,capabilities:["avatar.edit"] },
-      { id:"mirror",roomId:"bedroom",type:"mirror",name:"Mirror",x:650,y:160,r:42,capabilities:["avatar.edit"] },
+      { id:"wardrobe",roomId:"bedroom",type:"wardrobe",name:"Wardrobe",x:300,y:160,r:45,capabilities:["avatar.edit","avatar.clothes"] },
+      { id:"mirror",roomId:"bedroom",type:"mirror",name:"Mirror",x:650,y:160,r:42,capabilities:["avatar.edit","avatar.shave"] },
+      { id:"sink",roomId:"bedroom",type:"sink",name:"Bathroom sink",x:850,y:160,r:40,capabilities:["avatar.shave"] },
       { id:"bedroom-switch",roomId:"bedroom",type:"switch",name:"Bedroom light",x:100,y:280,r:34,capabilities:["smarthome.lights"] },
       { id:"company-portal",roomId:"livingRoom",type:"portal",name:"City & Work",x:760,y:500,r:42,capabilities:["street.enter"]}
     ]
