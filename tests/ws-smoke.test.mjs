@@ -71,7 +71,7 @@ try {
     type: "furniture.place",
     payload: {
       id: "chair-basic-smoke1", roomId: "livingRoom", type: "furniture", subtype: "chair",
-      name: "Chair", label: "🪑", x: 220, y: 240, r: 36, capabilities: ["furniture.pick"],
+      name: "Chair", label: "💺", x: 220, y: 240, r: 36, capabilities: ["furniture.pick"],
       inventoryItemId: "chair-basic", movable: true
     }
   }));
@@ -85,6 +85,20 @@ try {
   const bSnap = bMsgs.find((m) => m.type === "room.snapshot");
   assert.ok(bSnap.payload.users.some((u) => u.profile?.name === "Alice"), "B snapshot should list Alice");
   assert.ok(Array.isArray(bSnap.payload.furniture), "snapshot should include furniture array");
+
+  const bWelcome = bMsgs.find((m) => m.type === "welcome");
+  const aWelcome = aMsgs.find((m) => m.type === "welcome");
+  const bId = bWelcome?.payload?.id;
+  const aId = aWelcome?.payload?.id;
+  assert.ok(bId && aId);
+  a.send(JSON.stringify({ type: "key.grant", payload: { targetId: bId, durationHours: 1, permissions: ["visit", "media", "games"] } }));
+  const keyG = await waitMsg(bMsgs, (m) => m.type === "key.granted" && m.payload?.role === "guest");
+  assert.ok(keyG.payload.key?.permissions?.includes("media"));
+  assert.ok(keyG.payload.key?.expiresAt > Date.now());
+
+  b.send(JSON.stringify({ type: "visit.request", payload: { targetId: aId } }));
+  const viaKey = await waitMsg(bMsgs, (m) => m.type === "visit.granted");
+  assert.equal(viaKey.payload.viaKey, true);
 
   a.close();
   b.close();
