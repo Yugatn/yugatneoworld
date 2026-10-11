@@ -8,6 +8,12 @@ A social network designed as a navigable 2D world rather than a conventional pro
 - Stable `subjectId` stored in the browser; no server password or OAuth in v0.1.
 - Multiplayer display name follows the active session.
 
+## Voice commands
+
+- **🎙** button or **V** key: speech commands (ru/en).
+- Door open/close, street, home, inventory, multiplayer, emotes, help.
+- Needs browser SpeechRecognition (Chrome/Edge; mic permission).
+
 ## Temporary keys
 
 - Multiplayer → **Key** next to a player: grant 1h / 6h / 24h access.
@@ -48,11 +54,11 @@ npm test
 npm run check
 ```
 
-Controls: WASD / drag / joystick · **E** interact · **Esc** close panel.
+Controls: WASD / drag / joystick · **E** interact · **V** voice · **Esc** close panel.
 
 ## Status
 
-v0.8.0 — spatial loop + employment + realtime rooms/chat/presence/emotes + mobile + furniture sync + local accounts + visits/streets/cinema pool + **temporary apartment keys**.
+v0.9.0 — spatial loop + employment + realtime + mobile + furniture sync + accounts + visits/streets/cinema + temporary keys + **voice commands**.
 
 Still boundaries: server auth, real film streaming, persistent keys across restarts, PIN.
 
