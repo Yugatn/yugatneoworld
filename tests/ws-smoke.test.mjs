@@ -29,6 +29,17 @@ async function waitMsg(arr, pred, ms = 5000) {
 
 try {
   await sleep(700);
+
+  const home = await fetch(`http://127.0.0.1:${port}/`);
+  assert.equal(home.status, 200, "home page should be served");
+  assert.match(home.headers.get("content-security-policy") || "", /default-src 'self'/);
+  for (const privatePath of ["/package.json", "/server/index.js", "/docs/ROADMAP.md", "/tests/ws-smoke.test.mjs"]) {
+    const response = await fetch(`http://127.0.0.1:${port}${privatePath}`);
+    assert.equal(response.status, 404, `${privatePath} must not be served publicly`);
+  }
+  const methodCheck = await fetch(`http://127.0.0.1:${port}/`, { method: "POST" });
+  assert.equal(methodCheck.status, 405, "unsupported HTTP methods should be rejected");
+
   const a = new WebSocket(`ws://127.0.0.1:${port}`);
   const b = new WebSocket(`ws://127.0.0.1:${port}`);
   const aMsgs = track(a);
