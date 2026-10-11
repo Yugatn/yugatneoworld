@@ -16,6 +16,18 @@ assert.equal(matchVoiceCommand("помощь").id, "help");
 assert.equal(matchVoiceCommand(""), null);
 assert.equal(matchVoiceCommand("asdfghjkl xyz"), null);
 
+// Smart home
+assert.equal(matchVoiceCommand("smart home").id, "smarthome.panel");
+assert.equal(matchVoiceCommand("умный дом").id, "smarthome.panel");
+assert.equal(matchVoiceCommand("lights on").id, "lights.on");
+assert.equal(matchVoiceCommand("включи свет").id, "lights.on");
+assert.equal(matchVoiceCommand("выключи свет").id, "lights.off");
+assert.equal(matchVoiceCommand("lights off").id, "lights.off");
+assert.equal(matchVoiceCommand("теплее").id, "climate.warmer");
+assert.equal(matchVoiceCommand("холоднее").id, "climate.cooler");
+assert.equal(matchVoiceCommand("телевизор").id, "tv.toggle");
+assert.equal(matchVoiceCommand("музыка").id, "music.toggle");
+
 assert.ok(listVoiceHelp().length >= VOICE_COMMANDS.length - 1);
 assert.equal(speechRecognitionSupported(), false);
 
