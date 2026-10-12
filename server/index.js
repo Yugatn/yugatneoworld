@@ -1,40 +1,77 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
+import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { WebSocketServer } from "ws";
+import { SECURITY_HEADERS } from "../src/domain/security.js";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const port = Number(process.env.PORT || 8080);
+const isProd = process.env.NODE_ENV === "production";
 const clients = new Map();
 const rooms = new Map();
 const cinemas = new Map();
 const furnitureByRoom = new Map();
 const keysByHost = new Map();
+/** Simple per-IP connection budget (in-memory). */
+const connectBudget = new Map();
 const COLORS = ["#f1a6cf", "#a6e3f1", "#c7f1a6", "#f1d0a6", "#d0a6f1", "#a6f1d8"];
+
+const BASE_HEADERS = {
+  ...SECURITY_HEADERS,
+  "Cache-Control": "no-cache",
+  "X-Powered-By": "" // remove fingerprint noise if proxies add it
+};
+
+/** In production prefer HSTS; in local dev keep CSP but allow softer connect. */
+function responseHeaders(extra = {}) {
+  const h = { ...BASE_HEADERS, ...extra };
+  if (!isProd) {
+    // Local WS often on same host without wss — CSP still ok with connect-src self
+    delete h["Strict-Transport-Security"];
+  }
+  // Empty X-Powered-By: omit rather than send blank if undesired
+  if (h["X-Powered-By"] === "") delete h["X-Powered-By"];
+  return h;
+}
 
 function roomFor(id) {
   let room = rooms.get(id);
-  if (!room) { room = new Map(); rooms.set(id, room); }
+  if (!room) {
+    room = new Map();
+    rooms.set(id, room);
+  }
   return room;
 }
 function cinemaFor(roomId) {
   let c = cinemas.get(roomId);
   if (!c) {
-    c = { filmId: "premiere-aurora", contributions: {}, active: false, activatedAt: null, viewers: [] };
+    c = {
+      filmId: "premiere-aurora",
+      contributions: {},
+      active: false,
+      activatedAt: null,
+      viewers: []
+    };
     cinemas.set(roomId, c);
   }
   return c;
 }
 function furnitureFor(roomId) {
   let list = furnitureByRoom.get(roomId);
-  if (!list) { list = []; furnitureByRoom.set(roomId, list); }
+  if (!list) {
+    list = [];
+    furnitureByRoom.set(roomId, list);
+  }
   return list;
 }
 function keysFor(hostId) {
   let list = keysByHost.get(hostId);
-  if (!list) { list = []; keysByHost.set(hostId, list); }
+  if (!list) {
+    list = [];
+    keysByHost.set(hostId, list);
+  }
   return list;
 }
 function purgeHostKeys(hostId, now = Date.now()) {
@@ -47,9 +84,14 @@ function findValidKey(hostId, guestId, now = Date.now()) {
 }
 function publicKey(k) {
   return {
-    id: k.id, hostId: k.hostId, guestId: k.guestId,
-    hostName: k.hostName, guestName: k.guestName,
-    permissions: [...k.permissions], grantedAt: k.grantedAt, expiresAt: k.expiresAt
+    id: k.id,
+    hostId: k.hostId,
+    guestId: k.guestId,
+    hostName: k.hostName,
+    guestName: k.guestName,
+    permissions: [...k.permissions],
+    grantedAt: k.grantedAt,
+    expiresAt: k.expiresAt
   };
 }
 function sanitizeFurniture(obj) {
@@ -66,7 +108,9 @@ function sanitizeFurniture(obj) {
     x: Math.max(0, Math.min(4000, Number(obj.x) || 0)),
     y: Math.max(0, Math.min(3000, Number(obj.y) || 0)),
     r: Math.max(16, Math.min(80, Number(obj.r) || 36)),
-    capabilities: Array.isArray(obj.capabilities) ? obj.capabilities.slice(0, 8).map(String) : ["furniture.pick"],
+    capabilities: Array.isArray(obj.capabilities)
+      ? obj.capabilities.slice(0, 8).map(String)
+      : ["furniture.pick"],
     inventoryItemId: String(obj.inventoryItemId || "").slice(0, 32) || null,
     movable: true,
     ownerId: obj.ownerId ? String(obj.ownerId).slice(0, 64) : null
@@ -82,17 +126,37 @@ function broadcast(room, message, exceptId = null) {
 }
 function publicPeer(peer) {
   return {
-    id: peer.id, roomId: peer.roomId, profile: peer.profile,
-    x: peer.x, y: peer.y, scene: peer.scene, color: peer.color,
+    id: peer.id,
+    roomId: peer.roomId,
+    profile: peer.profile,
+    x: peer.x,
+    y: peer.y,
+    scene: peer.scene,
+    color: peer.color,
     doorOpen: peer.doorOpen !== false
   };
 }
 function sanitizeName(name) {
-  const n = String(name || "Guest").replace(/[^\p{L}\p{N}\s._-]/gu, "").trim().slice(0, 24);
+  const n = String(name || "Guest")
+    .replace(/[^\p{L}\p{N}\s._-]/gu, "")
+    .trim()
+    .slice(0, 24);
   return n || "Guest";
 }
 function sanitizeRoom(roomId) {
   return String(roomId || "apartment:demo").replace(/[^\w:.-]/g, "").slice(0, 64) || "apartment:demo";
+}
+/** Strip obvious script / event-handler payloads from chat (defense in depth). */
+function sanitizeChatText(text) {
+  let s = String(text || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 140);
+  s = s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  s = s.replace(/javascript\s*:/gi, "");
+  s = s.replace(/on\w+\s*=/gi, "");
+  return s;
 }
 function cinemaPublic(c) {
   const total = Object.values(c.contributions).reduce((s, n) => s + (Number(n) || 0), 0);
@@ -107,47 +171,117 @@ function cinemaPublic(c) {
   };
 }
 
+function clientIp(req) {
+  const xf = req.headers["x-forwarded-for"];
+  if (typeof xf === "string" && xf.length) return xf.split(",")[0].trim().slice(0, 64);
+  return req.socket?.remoteAddress || "unknown";
+}
+
+function allowConnect(ip) {
+  const now = Date.now();
+  let b = connectBudget.get(ip);
+  if (!b || now > b.resetAt) {
+    b = { count: 0, resetAt: now + 60_000 };
+    connectBudget.set(ip, b);
+  }
+  if (b.count >= 40) return false;
+  b.count += 1;
+  return true;
+}
+
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8",
-  ".webmanifest": "application/manifest+json"
+  ".webmanifest": "application/manifest+json",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon"
 };
 
 const server = http.createServer(async (req, res) => {
+  const method = req.method || "GET";
+  const requestPath = decodeURIComponent((req.url || "/").split("?")[0]);
+
+  // Liveness — no stack, no version leak beyond product name
+  if (requestPath === "/healthz" || requestPath === "/health") {
+    res.writeHead(200, responseHeaders({ "Content-Type": "application/json; charset=utf-8" }));
+    res.end(JSON.stringify({ ok: true, service: "yugatn-eworld" }));
+    return;
+  }
+
+  if (method !== "GET" && method !== "HEAD") {
+    res.writeHead(405, responseHeaders({ Allow: "GET, HEAD" }));
+    res.end("Method Not Allowed");
+    return;
+  }
+
   try {
-    const requestPath = decodeURIComponent((req.url || "/").split("?")[0]);
     const safePath = normalize(requestPath === "/" ? "/index.html" : requestPath);
+    // Block path traversal segments explicitly
+    if (safePath.split(sep).includes("..") || safePath.includes("..")) {
+      res.writeHead(400, responseHeaders());
+      res.end("Bad Request");
+      return;
+    }
     const file = join(root, safePath);
-    if (!file.startsWith(root)) throw new Error("invalid path");
+    if (!file.startsWith(root + sep) && file !== root) {
+      res.writeHead(400, responseHeaders());
+      res.end("Bad Request");
+      return;
+    }
     const data = await readFile(file);
-    res.writeHead(200, { "Content-Type": mime[extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
+    const type = mime[extname(file)] || "application/octet-stream";
+    const headers = responseHeaders({ "Content-Type": type });
+    if (method === "HEAD") {
+      res.writeHead(200, { ...headers, "Content-Length": data.length });
+      res.end();
+      return;
+    }
+    res.writeHead(200, headers);
     res.end(data);
   } catch {
-    res.writeHead(404);
+    res.writeHead(404, responseHeaders({ "Content-Type": "text/plain; charset=utf-8" }));
     res.end("Not found");
   }
 });
 
-const wss = new WebSocketServer({ server });
-wss.on("connection", (socket) => {
+const wss = new WebSocketServer({ server, maxPayload: 8 * 1024 });
+wss.on("connection", (socket, req) => {
+  const ip = clientIp(req);
+  if (!allowConnect(ip)) {
+    socket.close(1008, "rate_limited");
+    return;
+  }
+
   const id = randomUUID();
   const peer = {
-    id, socket, roomId: null,
+    id,
+    socket,
+    roomId: null,
     profile: { name: "Guest", avatar: "default" },
-    x: 180, y: 220, scene: "apartment",
+    x: 180,
+    y: 220,
+    scene: "apartment",
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     doorOpen: true,
-    lastMoveAt: 0, lastChatAt: 0, lastEmoteAt: 0
+    lastMoveAt: 0,
+    lastChatAt: 0,
+    lastEmoteAt: 0
   };
   clients.set(id, peer);
   send(socket, "welcome", { id, color: peer.color });
 
   socket.on("message", (raw) => {
     let message;
-    try { message = JSON.parse(raw.toString().slice(0, 4000)); } catch { return; }
+    try {
+      message = JSON.parse(raw.toString().slice(0, 4000));
+    } catch {
+      return;
+    }
     const { type, payload = {} } = message;
+    if (typeof type !== "string" || type.length > 48) return;
 
     if (type === "room.join") {
       const roomId = sanitizeRoom(payload.roomId);
@@ -191,27 +325,54 @@ wss.on("connection", (socket) => {
       const now = Date.now();
       if (now - peer.lastMoveAt < 30) return;
       peer.lastMoveAt = now;
-      const x = Number(payload.x), y = Number(payload.y);
+      const x = Number(payload.x),
+        y = Number(payload.y);
       if (!Number.isFinite(x) || !Number.isFinite(y)) return;
       peer.x = Math.max(20, Math.min(4000, x));
       peer.y = Math.max(40, Math.min(3000, y));
       if (payload.scene === "street" || payload.scene === "apartment") peer.scene = payload.scene;
-      broadcast(room, JSON.stringify({ type: "avatar.move", payload: { id, x: peer.x, y: peer.y, scene: peer.scene } }), id);
+      broadcast(
+        room,
+        JSON.stringify({
+          type: "avatar.move",
+          payload: { id, x: peer.x, y: peer.y, scene: peer.scene }
+        }),
+        id
+      );
       return;
     }
     if (type === "profile.update") {
-      peer.profile = { name: sanitizeName(payload.name), avatar: String(payload.avatar || peer.profile.avatar || "default").slice(0, 32) };
-      broadcast(room, JSON.stringify({ type: "profile.update", payload: { id, profile: peer.profile } }));
+      peer.profile = {
+        name: sanitizeName(payload.name),
+        avatar: String(payload.avatar || peer.profile.avatar || "default").slice(0, 32)
+      };
+      broadcast(
+        room,
+        JSON.stringify({ type: "profile.update", payload: { id, profile: peer.profile } })
+      );
       return;
     }
     if (type === "scene.change") {
       peer.scene = payload.scene === "street" ? "street" : "apartment";
-      broadcast(room, JSON.stringify({ type: "scene.change", payload: { id, scene: peer.scene, x: peer.x, y: peer.y } }), id);
+      broadcast(
+        room,
+        JSON.stringify({
+          type: "scene.change",
+          payload: { id, scene: peer.scene, x: peer.x, y: peer.y }
+        }),
+        id
+      );
       return;
     }
     if (type === "apartment.door") {
       peer.doorOpen = Boolean(payload.open);
-      broadcast(room, JSON.stringify({ type: "apartment.door", payload: { id, open: peer.doorOpen, name: peer.profile.name } }));
+      broadcast(
+        room,
+        JSON.stringify({
+          type: "apartment.door",
+          payload: { id, open: peer.doorOpen, name: peer.profile.name }
+        })
+      );
       send(socket, "apartment.door", { id, open: peer.doorOpen, name: peer.profile.name });
       return;
     }
@@ -224,15 +385,26 @@ wss.on("connection", (socket) => {
       const key = findValidKey(target.id, id);
       const viaKey = Boolean(key);
       if (target.doorOpen === false && !viaKey) {
-        send(socket, "visit.denied", { reason: "closed", targetId: target.id, name: target.profile.name });
+        send(socket, "visit.denied", {
+          reason: "closed",
+          targetId: target.id,
+          name: target.profile.name
+        });
         return;
       }
       send(target.socket, "visit.incoming", {
-        fromId: id, name: peer.profile.name, roomId: peer.roomId, viaKey, key: viaKey ? publicKey(key) : null
+        fromId: id,
+        name: peer.profile.name,
+        roomId: peer.roomId,
+        viaKey,
+        key: viaKey ? publicKey(key) : null
       });
       send(socket, "visit.granted", {
-        targetId: target.id, name: target.profile.name, roomId: target.roomId,
-        viaKey, permissions: viaKey ? key.permissions : ["visit"],
+        targetId: target.id,
+        name: target.profile.name,
+        roomId: target.roomId,
+        viaKey,
+        permissions: viaKey ? key.permissions : ["visit"],
         key: viaKey ? publicKey(key) : null
       });
       return;
@@ -291,7 +463,10 @@ wss.on("connection", (socket) => {
         send(socket, "key.error", { reason: "not_found" });
         return;
       }
-      keysByHost.set(id, list.filter((k) => k.id !== keyId));
+      keysByHost.set(
+        id,
+        list.filter((k) => k.id !== keyId)
+      );
       send(socket, "key.revoked", { keyId, guestId: found.guestId });
       const guest = room.get(found.guestId);
       if (guest) send(guest.socket, "key.revoked", { keyId, hostId: id, hostName: peer.profile.name });
@@ -366,9 +541,19 @@ wss.on("connection", (socket) => {
       const now = Date.now();
       if (now - peer.lastChatAt < 800) return;
       peer.lastChatAt = now;
-      const text = String(payload.text || "").replace(/\s+/g, " ").trim().slice(0, 140);
+      const text = sanitizeChatText(payload.text);
       if (!text) return;
-      const msg = { type: "chat.message", payload: { id: randomUUID(), fromId: id, name: peer.profile.name, color: peer.color, text, ts: now } };
+      const msg = {
+        type: "chat.message",
+        payload: {
+          id: randomUUID(),
+          fromId: id,
+          name: peer.profile.name,
+          color: peer.color,
+          text,
+          ts: now
+        }
+      };
       broadcast(room, JSON.stringify(msg));
       send(socket, msg.type, msg.payload);
       return;
@@ -382,7 +567,16 @@ wss.on("connection", (socket) => {
       if (!emote) return;
       const msg = {
         type: "emote.play",
-        payload: { fromId: id, name: peer.profile.name, color: peer.color, emote, x: peer.x, y: peer.y, scene: peer.scene, ts: now }
+        payload: {
+          fromId: id,
+          name: peer.profile.name,
+          color: peer.color,
+          emote,
+          x: peer.x,
+          y: peer.y,
+          scene: peer.scene,
+          ts: now
+        }
       };
       broadcast(room, JSON.stringify(msg));
       send(socket, msg.type, msg.payload);
@@ -395,7 +589,12 @@ wss.on("connection", (socket) => {
     }
     if (type === "interaction.proximity") {
       const target = room.get(String(payload.targetId));
-      if (target) send(target.socket, "interaction.proximity", { fromId: id, name: peer.profile.name, objectId: payload.objectId });
+      if (target)
+        send(target.socket, "interaction.proximity", {
+          fromId: id,
+          name: peer.profile.name,
+          objectId: payload.objectId
+        });
     }
   });
 
@@ -415,4 +614,10 @@ wss.on("connection", (socket) => {
   });
 });
 
-server.listen(port, () => console.log("Yugatn eWorld realtime server listening on :" + port));
+server.listen(port, () =>
+  console.log(
+    "Yugatn eWorld realtime server listening on :" +
+      port +
+      (isProd ? " [production headers]" : " [dev]")
+  )
+);

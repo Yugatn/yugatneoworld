@@ -1,35 +1,26 @@
 # Roadmap — Yugatn eWorld
 
-## Milestone 0 — Spatial shell
+## Done (domain / vertical slices)
 
-2D rendering, apartment scene, avatar movement, camera, collision boundaries, interaction radius and object highlighting.
+- Spatial apartment, rooms, smart home, avatar, commerce, school mode, ACL, bulletin, embeds
+- Avatar shop / NFT / second-hand, travel drafts, cinema invites, podcasts
+- Wellness + health, currency (YC), identity verify, voting
+- Security domain: sessions, audit, rate limits, redaction, OWASP Top 10 docs
+- **Server hardening v0.24:** security headers (CSP/HSTS policy), `/healthz`, chat sanitize, WS connect budget
 
-## Milestone 1 — Functional apartment
+## Milestone — Production infrastructure (next)
 
-Mailbox, laptop, television, music player, doors and basic furniture.
+1. Server-side authority for identity, YC, official votes (A01/A02/A07)
+2. Persistent audit sink + alerts (A09)
+3. Real SHA-256 identity hashing + TLS termination
+4. CI hard-fail on critical `npm audit` (A06)
+5. Canvas UI parity for health/wellness/avatar effects
+6. Moderation tools for bulletin/chat
 
-## Milestone 2 — Persistence
+## Milestone — Shared world
 
-World-state serialization, inventory, furniture placement, object replacement and avatar appearance persistence.
+Public areas, discovery, events, partner markets live integration.
 
-## Milestone 3 — Social
+## Engineering rule
 
-Account identity, friends, apartment visits, visitor permissions and mailbox messaging.
-
-## Milestone 4 — Media
-
-Video, audio, images and personal collections.
-
-## Milestone 5 — Shared world
-
-Public areas, social meeting spaces, discovery, events and shops.
-
-## Milestone 6 — Production infrastructure
-
-Backend, synchronization, real-time presence, moderation, privacy controls, backups and observability.
-
-## Immediate engineering task
-
-Implement the smallest playable vertical slice: spawn avatar, move, approach object, interact, open capability, return to world.
-
-Do not build the entire social backend before validating the spatial interaction model.
+Domain modules first; no separate apps; keep tests green; security contracts before feature chrome.
