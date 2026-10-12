@@ -80,6 +80,10 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "payments.confirm", label: "Confirm receipt", aliases: ["confirm receipt", "confirm purchase", "подтвердить получение", "подтвердить покупку", "получил товар"] },
   { id: "crypto.p2p", label: "P2P crypto exchange", aliases: ["crypto", "p2p", "p2p exchange", "крипта", "p2p обмен", "обменник", "пи ту пи", "криптообмен"] },
   { id: "crypto.pay", label: "Pay with crypto", aliases: ["pay with crypto", "crypto payment", "оплата usdt", "оплата криптой", "заплатить usdt", "пополнить криптой"] },
+  { id: "browser.anonymous", label: "Anonymous browser", aliases: ["anonymous browser", "private browser", "tor browser", "анонимный браузер", "приватный браузер", "тор браузер", "открыть браузер"] },
+  { id: "browser.search", label: "Private search", aliases: ["private search", "search the web", "приватный поиск", "поиск в браузере", "найти в браузере", "искать"] },
+  { id: "browser.newcircuit", label: "New circuit", aliases: ["new circuit", "new identity", "новая цепочка", "новая личность", "сменить цепочку", "очистить следы"] },
+  { id: "browser.close", label: "Close browser", aliases: ["close browser", "закрыть браузер", "выйти из браузера"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 

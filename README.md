@@ -2,13 +2,14 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
+## Anonymous browser
+
+Walk up to a **laptop** → private session → search the in-world knowledge index → tabs / new circuit / wipe on close.  
+Sessions are not persisted. Docs: [`docs/ANON_BROWSER_V0.1.md`](docs/ANON_BROWSER_V0.1.md).
+
 ## Payments
 
-- **YC**: instant / escrow / receipts / seller ratings
-- **Crypto & P2P** (domain model): USDT·BTC·ETH·TON, pay intents, P2P offers, exchanger registry stubs
-- Docs: [`docs/PAYMENTS_V0.1.md`](docs/PAYMENTS_V0.1.md) · [`docs/CRYPTO_P2P_V0.1.md`](docs/CRYPTO_P2P_V0.1.md)
-
-> Crypto module is **symbolic** — no private keys, no on-chain settlement in this version.
+YC escrow · crypto/P2P domain model · marketplace
 
 ## Security
 
@@ -23,7 +24,7 @@ npm test
 
 ## Status
 
-v0.28.0 — crypto pay + P2P exchangers, world v20.
+v0.29.0 — anonymous browser at computers, world v21.
 
 ## Author
 
