@@ -4,13 +4,14 @@ A social network designed as a navigable 2D world rather than a conventional pro
 
 ## Payments & marketplace
 
-- **YC payments**: instant transfer or **escrow** (hold → confirm receipt / refund)
-- **C2C marketplace** (Avito-style) uses the payments layer
+- **YC**: instant pay or **escrow** (hold → confirm / refund / auto-release)
+- **Receipts** and **seller ratings** (1–5) after completed deals
+- C2C marketplace (Avito-style)
 - Docs: [`docs/PAYMENTS_V0.1.md`](docs/PAYMENTS_V0.1.md) · [`docs/MARKETPLACE_V0.1.md`](docs/MARKETPLACE_V0.1.md)
 
 ## Security
 
-OWASP standard: [`docs/OWASP_TOP10_EWORLD.md`](docs/OWASP_TOP10_EWORLD.md)
+[`docs/OWASP_TOP10_EWORLD.md`](docs/OWASP_TOP10_EWORLD.md)
 
 ## Run
 
@@ -21,7 +22,7 @@ npm test
 
 ## Status
 
-v0.26.0 — payments (escrow/refund), marketplace checkout, world v19.
+v0.27.0 — escrow auto-release, receipts, seller ratings.
 
 ## Author
 

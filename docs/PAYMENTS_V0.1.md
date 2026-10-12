@@ -1,4 +1,4 @@
-# Payments v0.1
+# Payments v0.1 → v0.27
 
 In-world payments in **Yugatn Coin (YC)** only — not real money / not a PSP.
 
@@ -7,26 +7,32 @@ In-world payments in **Yugatn Coin (YC)** only — not real money / not a PSP.
 | Method | Flow |
 |--------|------|
 | `yc_instant` | Buyer → seller immediately; optional platform fee from seller |
-| `yc_escrow` | Buyer → **escrow** hold → `releaseEscrow` (to seller) or `refundEscrow` (to buyer) |
+| `yc_escrow` | Buyer → **escrow** hold → `releaseEscrow` / `refundEscrow` / **auto-release** after TTL |
+
+Default escrow TTL: **7 days** (`DEFAULT_ESCROW_TTL_MS`).
 
 ## API (`src/domain/payments.js`)
 
-- `createPayment` — create order + capture
-- `releaseEscrow` — confirm receipt / release to seller
-- `refundEscrow` — return funds to buyer
-- `listOrders` / `getOrder`
-- `cancelOrder` — only if still `pending`
+| Function | Purpose |
+|----------|---------|
+| `createPayment` | Create + capture (instant or hold) |
+| `releaseEscrow` | Confirm receipt → seller |
+| `refundEscrow` | Return funds to buyer |
+| `autoReleaseExpired` | Cron/tick: release held past `releaseAfter` |
+| `listOrders` / `getOrder` | Order history |
+| `listReceipts` | Immutable-ish receipt snapshots |
+| `rateSeller` | 1–5 stars after completed order |
+| `getSellerRating` | Avg + count |
 
-## Marketplace integration
+## Marketplace
 
 ```js
-purchaseListing(mp, currency, payments, { listingId, buyerId, escrow: true|false })
-confirmPurchase(mp, currency, payments, { listingId, buyerId })
-cancelPurchase(mp, currency, payments, { listingId, actorId, reason })
+purchaseListing(mp, currency, payments, { listingId, buyerId, escrow })
+confirmPurchase(...)
+cancelPurchase(...)  // refund escrow, listing active again
 ```
 
-- `preferEscrow` on listing → default escrow checkout
-- Fee: **2%** (`PLATFORM_FEE_RATE`) on marketplace deals
+Fee: **2%** on marketplace deals.
 
 ## Voice
 
@@ -34,4 +40,4 @@ cancelPurchase(mp, currency, payments, { listingId, actorId, reason })
 
 ## World
 
-`WORLD_VERSION` **19** · `world.payments`
+`world.payments` · `WORLD_VERSION` ≥ 19

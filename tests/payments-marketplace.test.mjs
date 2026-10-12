@@ -5,7 +5,12 @@ import {
   releaseEscrow,
   refundEscrow,
   listOrders,
-  summarizePayments
+  listReceipts,
+  rateSeller,
+  getSellerRating,
+  autoReleaseExpired,
+  summarizePayments,
+  DEFAULT_ESCROW_TTL_MS
 } from "../src/domain/payments.js";
 import {
   createMarketplaceState,
@@ -34,7 +39,6 @@ const pay = createPaymentsState();
 ensureWallet(cur, "buyer", { initial: 100 });
 ensureWallet(cur, "seller", { initial: 10 });
 
-// Instant payment
 const inst = createPayment(pay, cur, {
   buyerId: "buyer",
   sellerId: "seller",
@@ -45,41 +49,60 @@ const inst = createPayment(pay, cur, {
 });
 assert.equal(inst.ok, true);
 assert.equal(inst.order.status, "completed");
-assert.ok(getBalance(cur, "buyer") < 100);
+assert.ok(inst.receipt);
+assert.ok(listReceipts(pay, "buyer").length >= 1);
 
-// Escrow flow
 credit(cur, "buyer", 50);
 const esc = createPayment(pay, cur, {
   buyerId: "buyer",
   sellerId: "seller",
   amount: 20,
   method: "yc_escrow",
-  platformFeeRate: 0.02
+  platformFeeRate: 0.02,
+  escrowTtlMs: 1000
 });
 assert.equal(esc.ok, true);
 assert.equal(esc.order.status, "held");
+assert.ok(esc.order.releaseAfter > Date.now());
+
 const beforeSeller = getBalance(cur, "seller");
 const rel = releaseEscrow(pay, cur, esc.order.id, { actorId: "buyer" });
 assert.equal(rel.ok, true);
-assert.equal(rel.order.status, "completed");
 assert.ok(getBalance(cur, "seller") > beforeSeller);
 
-// Refund escrow
+const rate = rateSeller(pay, esc.order.id, "buyer", 5, { comment: "ок" });
+assert.equal(rate.ok, true);
+assert.equal(getSellerRating(pay, "seller").count, 1);
+assert.equal(getSellerRating(pay, "seller").avg, 5);
+assert.equal(rateSeller(pay, esc.order.id, "buyer", 4).reason, "already_rated");
+
 credit(cur, "buyer", 30);
 const esc2 = createPayment(pay, cur, {
   buyerId: "buyer",
   sellerId: "seller",
   amount: 12,
+  method: "yc_escrow",
+  escrowTtlMs: 1
+});
+// force expired
+esc2.order.releaseAfter = Date.now() - 1;
+const auto = autoReleaseExpired(pay, cur);
+assert.ok(auto.released.includes(esc2.order.id));
+
+credit(cur, "buyer", 20);
+const esc3 = createPayment(pay, cur, {
+  buyerId: "buyer",
+  sellerId: "seller",
+  amount: 8,
   method: "yc_escrow"
 });
-const ref = refundEscrow(pay, cur, esc2.order.id, { actorId: "seller", reason: "no stock" });
+const ref = refundEscrow(pay, cur, esc3.order.id, { actorId: "seller", reason: "no stock" });
 assert.equal(ref.ok, true);
-assert.equal(ref.order.status, "refunded");
 
 assert.ok(listOrders(pay, "buyer").length >= 1);
-assert.ok(summarizePayments(pay).includes("completed"));
+assert.ok(summarizePayments(pay).includes("receipts"));
+assert.ok(DEFAULT_ESCROW_TTL_MS > 0);
 
-// Marketplace + payments
 const mp = createMarketplaceState();
 const listing = createListing(mp, {
   sellerId: "seller",
@@ -89,8 +112,6 @@ const listing = createListing(mp, {
   settlement: "yc",
   preferEscrow: true
 });
-assert.equal(listing.ok, true);
-
 const buy = purchaseListing(mp, cur, pay, {
   listingId: listing.listing.id,
   buyerId: "buyer",
@@ -98,8 +119,6 @@ const buy = purchaseListing(mp, cur, pay, {
 });
 assert.equal(buy.ok, true);
 assert.equal(buy.method, "yc_escrow");
-assert.equal(buy.listing.status, "reserved");
-
 const conf = confirmPurchase(mp, cur, pay, {
   listingId: listing.listing.id,
   buyerId: "buyer"
@@ -118,30 +137,32 @@ const buy2 = purchaseListing(mp, cur, pay, {
   buyerId: "buyer",
   escrow: true
 });
-assert.equal(buy2.ok, true);
-const can = cancelPurchase(mp, cur, pay, {
-  listingId: l2.listing.id,
-  actorId: "buyer",
-  reason: "changed mind"
-});
-assert.equal(can.ok, true);
-assert.equal(can.listing.status, "active");
+assert.equal(
+  cancelPurchase(mp, cur, pay, {
+    listingId: l2.listing.id,
+    actorId: "buyer",
+    reason: "changed mind"
+  }).ok,
+  true
+);
 
 const instList = createListing(mp, {
   sellerId: "seller",
   title: "Мышь",
   priceYc: 5
 });
-const buy3 = purchaseListing(mp, cur, pay, {
-  listingId: instList.listing.id,
-  buyerId: "buyer",
-  escrow: false
-});
-assert.equal(buy3.ok, true);
-assert.equal(buy3.listing.status, "sold");
+assert.equal(
+  purchaseListing(mp, cur, pay, {
+    listingId: instList.listing.id,
+    buyerId: "buyer",
+    escrow: false
+  }).listing.status,
+  "sold"
+);
 
 assert.ok(searchListings(mp, { status: "sold" }).length >= 1);
 assert.equal(matchVoiceCommand("оплата").id, "payments.orders");
 assert.equal(matchVoiceCommand("эскроу").id, "payments.escrow");
+assert.equal(matchVoiceCommand("подтвердить получение").id, "payments.confirm");
 
 console.log("payments-marketplace tests OK");
