@@ -13,7 +13,12 @@ YC escrow · crypto/P2P domain model · marketplace
 
 ## Security
 
-[`docs/OWASP_TOP10_EWORLD.md`](docs/OWASP_TOP10_EWORLD.md)
+- [OWASP Top 10 controls and checklist](docs/OWASP_TOP10_EWORLD.md)
+- [Engineering review, residual risks, and next priorities](docs/ENGINEERING_REVIEW_2026-10-12.md)
+
+**Prototype boundary:** local display profiles are not authenticated identities; realtime
+state is in-memory; YC/crypto/P2P and marketplace documents describe domain models, not
+live payment rails or production financial services.
 
 ## Run
 

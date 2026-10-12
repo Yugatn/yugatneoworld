@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import http from "node:http";
 import { setTimeout as sleep } from "node:timers/promises";
 import WebSocket from "ws";
 
@@ -29,6 +30,16 @@ async function waitMsg(arr, pred, ms = 5000) {
 
 try {
   await sleep(700);
+
+  // Malformed percent-encoding must return 400 without crashing the HTTP server.
+  const malformedPathStatus = await new Promise((resolve, reject) => {
+    http.get(`http://127.0.0.1:${port}/%E0%A4%A`, (res) => {
+      res.resume();
+      res.on("end", () => resolve(res.statusCode));
+    }).on("error", reject);
+  });
+  assert.equal(malformedPathStatus, 400);
+
   const a = new WebSocket(`ws://127.0.0.1:${port}`);
   const b = new WebSocket(`ws://127.0.0.1:${port}`);
   const aMsgs = track(a);
@@ -38,6 +49,8 @@ try {
     new Promise((r, j) => { b.once("open", r); b.once("error", j); })
   ]);
 
+  a.send("null");
+  a.send(JSON.stringify({ type: "room.join", payload: null }));
   a.send(JSON.stringify({
     type: "room.join",
     payload: { roomId: "test:smoke", x: 100, y: 100, profile: { name: "Alice" } }

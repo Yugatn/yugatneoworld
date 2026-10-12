@@ -16,6 +16,8 @@ const furnitureByRoom = new Map();
 const keysByHost = new Map();
 /** Simple per-IP connection budget (in-memory). */
 const connectBudget = new Map();
+const trustProxy = process.env.TRUST_PROXY === "true";
+const CONNECT_BUDGET_MAX_ENTRIES = 10_000;
 const COLORS = ["#f1a6cf", "#a6e3f1", "#c7f1a6", "#f1d0a6", "#d0a6f1", "#a6f1d8"];
 
 const BASE_HEADERS = {
@@ -172,13 +174,28 @@ function cinemaPublic(c) {
 }
 
 function clientIp(req) {
-  const xf = req.headers["x-forwarded-for"];
-  if (typeof xf === "string" && xf.length) return xf.split(",")[0].trim().slice(0, 64);
+  // Forwarded headers are attacker-controlled unless a trusted reverse proxy
+  // strips and rewrites them. Trust them only when the deployment opts in.
+  if (trustProxy) {
+    const xf = req.headers["x-forwarded-for"];
+    if (typeof xf === "string" && xf.length) {
+      const forwarded = xf.split(",")[0].trim().slice(0, 64);
+      if (forwarded) return forwarded;
+    }
+  }
   return req.socket?.remoteAddress || "unknown";
 }
 
 function allowConnect(ip) {
   const now = Date.now();
+  // Bound memory under high-cardinality connection attempts. Pruning is
+  // opportunistic, so this does not create a background timer.
+  if (connectBudget.size >= CONNECT_BUDGET_MAX_ENTRIES) {
+    for (const [key, bucket] of connectBudget) {
+      if (now > bucket.resetAt) connectBudget.delete(key);
+    }
+    if (connectBudget.size >= CONNECT_BUDGET_MAX_ENTRIES) return false;
+  }
   let b = connectBudget.get(ip);
   if (!b || now > b.resetAt) {
     b = { count: 0, resetAt: now + 60_000 };
@@ -202,7 +219,14 @@ const mime = {
 
 const server = http.createServer(async (req, res) => {
   const method = req.method || "GET";
-  const requestPath = decodeURIComponent((req.url || "/").split("?")[0]);
+  let requestPath;
+  try {
+    requestPath = decodeURIComponent((req.url || "/").split("?")[0]);
+  } catch {
+    res.writeHead(400, responseHeaders({ "Content-Type": "text/plain; charset=utf-8" }));
+    res.end("Bad Request");
+    return;
+  }
 
   // Liveness — no stack, no version leak beyond product name
   if (requestPath === "/healthz" || requestPath === "/health") {
@@ -276,12 +300,14 @@ wss.on("connection", (socket, req) => {
   socket.on("message", (raw) => {
     let message;
     try {
-      message = JSON.parse(raw.toString().slice(0, 4000));
+      message = JSON.parse(raw.toString());
     } catch {
       return;
     }
+    if (!message || typeof message !== "object" || Array.isArray(message)) return;
     const { type, payload = {} } = message;
     if (typeof type !== "string" || type.length > 48) return;
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
 
     if (type === "room.join") {
       const roomId = sanitizeRoom(payload.roomId);
@@ -296,8 +322,8 @@ wss.on("connection", (socket, req) => {
         }
       }
       peer.roomId = roomId;
-      peer.x = Number.isFinite(Number(payload.x)) ? Number(payload.x) : 180;
-      peer.y = Number.isFinite(Number(payload.y)) ? Number(payload.y) : 220;
+      peer.x = Number.isFinite(Number(payload.x)) ? Math.max(20, Math.min(4000, Number(payload.x))) : 180;
+      peer.y = Number.isFinite(Number(payload.y)) ? Math.max(40, Math.min(3000, Number(payload.y))) : 220;
       peer.scene = payload.scene === "street" ? "street" : "apartment";
       if (payload.doorOpen != null) peer.doorOpen = Boolean(payload.doorOpen);
       if (payload.profile) {
