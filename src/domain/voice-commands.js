@@ -75,6 +75,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "marketplace.open", label: "Marketplace", aliases: ["marketplace", "classifieds", "avito", "маркетплейс", "авито", "барахолка", "купить с рук", "частные объявления"] },
   { id: "marketplace.sell", label: "Sell on marketplace", aliases: ["sell item", "create listing", "продать товар", "подать объявление", "продать на авито", "новое объявление продажи"] },
   { id: "marketplace.browse", label: "Browse marketplace", aliases: ["browse marketplace", "search listings", "найти товар", "поиск объявлений", "смотреть объявления"] },
+  { id: "payments.orders", label: "Payment orders", aliases: ["payment", "payments", "my orders", "оплата", "мои заказы", "платежи", "история оплаты"] },
+  { id: "payments.escrow", label: "Escrow", aliases: ["escrow", "hold payment", "эскроу", "безопасная сделка", "холд оплаты"] },
+  { id: "payments.confirm", label: "Confirm receipt", aliases: ["confirm receipt", "confirm purchase", "подтвердить получение", "подтвердить покупку", "получил товар"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
