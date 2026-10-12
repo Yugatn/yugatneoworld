@@ -13,6 +13,7 @@ import { createAvatarShopState } from "./avatar-shop.js";
 import { createTravelState } from "./travel-tickets.js";
 import { createCinemaState } from "./cinema.js";
 import { createPodcastState } from "./podcasts.js";
+import { createWellnessState } from "./wellness.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -26,11 +27,8 @@ function isValidWorld(data) {
 }
 
 function ensureAvatarState(data) {
-  if (data.avatarState) {
-    data.avatarState = createAvatarState(data.avatarState);
-  } else {
-    data.avatarState = createAvatarState();
-  }
+  if (data.avatarState) data.avatarState = createAvatarState(data.avatarState);
+  else data.avatarState = createAvatarState();
   data.avatar.appearance = toLegacyAppearance(data.avatarState);
   return data;
 }
@@ -51,6 +49,7 @@ function ensureLife(data) {
   data.travel = createTravelState(data.travel || {});
   data.cinema = createCinemaState(data.cinema || {});
   data.podcasts = createPodcastState(data.podcasts || {});
+  data.wellness = createWellnessState(data.wellness || {});
   return data;
 }
 
@@ -69,6 +68,7 @@ function fillDefaults(fresh) {
   if (!fresh.travel) fresh.travel = createTravelState();
   if (!fresh.cinema) fresh.cinema = createCinemaState();
   if (!fresh.podcasts) fresh.podcasts = createPodcastState();
+  if (!fresh.wellness) fresh.wellness = createWellnessState();
   return fresh;
 }
 
@@ -119,6 +119,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.travel) fresh.travel = createTravelState(data.travel);
       if (data.cinema) fresh.cinema = createCinemaState(data.cinema);
       if (data.podcasts) fresh.podcasts = createPodcastState(data.podcasts);
+      if (data.wellness) fresh.wellness = createWellnessState(data.wellness);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);

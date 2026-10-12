@@ -1,6 +1,6 @@
 /**
  * Avatar appearance, clothing wardrobe, temporary overlays,
- * and functional care actions (shave at home, haircut in city).
+ * functional care, and wellness-driven body / yoga-aura (when consented).
  * Pure domain — no DOM / network.
  */
 
@@ -22,12 +22,10 @@ export const SKIN_TONES = Object.freeze([
 
 export const BODY_TYPES = Object.freeze(["default", "slim", "athletic"]);
 
-/** Clothing slots worn on the avatar. */
 export const CLOTHING_SLOTS = Object.freeze([
   "top", "bottom", "shoes", "accessory"
 ]);
 
-/** Catalog of wearable items (owned in wardrobe). */
 export const CLOTHING_CATALOG = Object.freeze({
   "top-casual": { slot: "top", name: "Casual shirt", label: "👕", style: "casual" },
   "top-formal": { slot: "top", name: "Formal shirt", label: "👔", style: "formal" },
@@ -44,23 +42,23 @@ export const CLOTHING_CATALOG = Object.freeze({
   "acc-scarf": { slot: "accessory", name: "Scarf", label: "🧣", style: "casual" }
 });
 
-/** Temporary overlay ids and default durations (ms). */
 export const TEMP_EFFECTS = Object.freeze({
   fresh_shave: { label: "Freshly shaved", durationMs: 6 * 60 * 60 * 1000 },
   new_haircut: { label: "New haircut", durationMs: 24 * 60 * 60 * 1000 },
   wet_hair: { label: "Wet hair", durationMs: 30 * 60 * 1000 },
   tired: { label: "Tired", durationMs: 2 * 60 * 60 * 1000 },
-  dressed_up: { label: "Dressed up", durationMs: 8 * 60 * 60 * 1000 }
+  dressed_up: { label: "Dressed up", durationMs: 8 * 60 * 60 * 1000 },
+  post_workout: { label: "Post-workout glow", durationMs: 3 * 60 * 60 * 1000 },
+  yoga_aura: { label: "Yoga aura", durationMs: 12 * 60 * 60 * 1000 }
 });
 
-/** How long after a shave until stubble appears (ms). */
 export const STUBBLE_AFTER_MS = 18 * 60 * 60 * 1000;
-/** How long until full beard if never shaved again. */
 export const BEARD_AFTER_MS = 5 * 24 * 60 * 60 * 1000;
 
 export function createAvatarState(seed = {}) {
   const base = seed.base && typeof seed.base === "object" ? seed.base : {};
   const worn = seed.worn && typeof seed.worn === "object" ? seed.worn : {};
+  const fitness = seed.fitness && typeof seed.fitness === "object" ? seed.fitness : {};
   return {
     base: {
       body: BODY_TYPES.includes(base.body) ? base.body : "default",
@@ -69,25 +67,26 @@ export function createAvatarState(seed = {}) {
       hairColor: HAIR_COLORS.includes(base.hairColor) ? base.hairColor : "brown",
       facialHair: FACIAL_HAIR.includes(base.facialHair) ? base.facialHair : "none"
     },
-    /** Currently equipped clothing item ids by slot */
     worn: {
       top: typeof worn.top === "string" ? worn.top : "top-casual",
       bottom: typeof worn.bottom === "string" ? worn.bottom : "bottom-jeans",
       shoes: typeof worn.shoes === "string" ? worn.shoes : "shoes-sneakers",
       accessory: worn.accessory != null ? worn.accessory : null
     },
-    /** Owned clothing item ids */
     wardrobe: Array.isArray(seed.wardrobe)
       ? [...new Set(seed.wardrobe.filter((id) => CLOTHING_CATALOG[id]))]
       : ["top-casual", "bottom-jeans", "shoes-sneakers", "top-hoodie"],
-    /** Temporary overlays: { id, expiresAt } */
     temps: Array.isArray(seed.temps)
       ? seed.temps.map((t) => ({ id: String(t.id), expiresAt: Number(t.expiresAt) || 0 }))
       : [],
-    /** Timestamp of last shave (for growth simulation) */
     lastShaveAt: typeof seed.lastShaveAt === "number" ? seed.lastShaveAt : null,
-    /** Timestamp of last haircut */
-    lastHaircutAt: typeof seed.lastHaircutAt === "number" ? seed.lastHaircutAt : null
+    lastHaircutAt: typeof seed.lastHaircutAt === "number" ? seed.lastHaircutAt : null,
+    /** Wellness-driven visual layer (filled only with user consent via wellness module). */
+    fitness: {
+      bodyStage: fitness.bodyStage || null,
+      muscleTone: typeof fitness.muscleTone === "number" ? fitness.muscleTone : 0,
+      yogaAura: typeof fitness.yogaAura === "number" ? fitness.yogaAura : 0
+    }
   };
 }
 
@@ -116,7 +115,6 @@ export function clearTemp(state, effectId) {
   return before !== state.temps.length;
 }
 
-/** Simulate facial-hair growth from lastShaveAt. */
 export function resolveFacialHair(state, now = Date.now()) {
   if (state.base.facialHair === "mustache") return "mustache";
   if (state.lastShaveAt == null) return state.base.facialHair;
@@ -126,10 +124,6 @@ export function resolveFacialHair(state, now = Date.now()) {
   return "beard";
 }
 
-/**
- * Effective appearance for rendering / multiplayer snapshot.
- * Merges base + worn clothing labels + active temps + growth.
- */
 export function getEffectiveAppearance(state, now = Date.now()) {
   purgeExpiredTemps(state, now);
   const facial = resolveFacialHair(state, now);
@@ -139,6 +133,7 @@ export function getEffectiveAppearance(state, now = Date.now()) {
     if (id && CLOTHING_CATALOG[id]) wornLabels[slot] = CLOTHING_CATALOG[id].name;
     else wornLabels[slot] = null;
   }
+  const fitness = state.fitness || {};
   return {
     body: state.base.body,
     skin: state.base.skin,
@@ -153,9 +148,12 @@ export function getEffectiveAppearance(state, now = Date.now()) {
     },
     clothesLabels: wornLabels,
     temps: state.temps.map((t) => t.id),
-    // Legacy-compatible flat fields used by older world.avatar.appearance
     hair: state.base.hairStyle,
-    clothesStyle: clothingStyleTag(state)
+    clothesStyle: clothingStyleTag(state),
+    /** Renderer hooks for wellness visuals */
+    bodyStage: fitness.bodyStage || null,
+    muscleTone: fitness.muscleTone || 0,
+    yogaAura: fitness.yogaAura || 0
   };
 }
 
@@ -185,7 +183,6 @@ export function unequip(state, slot) {
     state.worn.accessory = null;
     return true;
   }
-  // Keep a default for required slots
   const defaults = { top: "top-casual", bottom: "bottom-jeans", shoes: "shoes-sneakers" };
   state.worn[slot] = defaults[slot] || null;
   return true;
@@ -205,10 +202,6 @@ export function setBaseFeature(state, key, value) {
   return true;
 }
 
-/**
- * Shave at home (mirror / bathroom).
- * Clears facial hair growth clock and applies temporary fresh_shave.
- */
 export function shaveAtHome(state, now = Date.now()) {
   state.lastShaveAt = now;
   state.base.facialHair = "none";
@@ -222,10 +215,6 @@ export function shaveAtHome(state, now = Date.now()) {
   };
 }
 
-/**
- * Haircut at a barbershop / salon in the city.
- * Permanently changes hairStyle (and optionally color); adds new_haircut temp.
- */
 export function haircutAtBarber(state, { style, color, now = Date.now() } = {}) {
   if (style && HAIR_STYLES.includes(style)) {
     state.base.hairStyle = style;
@@ -245,7 +234,6 @@ export function haircutAtBarber(state, { style, color, now = Date.now() } = {}) 
   };
 }
 
-/** List owned clothes grouped by slot for UI. */
 export function listWardrobe(state) {
   const bySlot = { top: [], bottom: [], shoes: [], accessory: [] };
   for (const id of state.wardrobe) {
@@ -267,15 +255,21 @@ export function summarizeAvatar(state, now = Date.now()) {
   const temps = app.temps
     .map((id) => TEMP_EFFECTS[id]?.label || id)
     .join(", ");
+  const fit =
+    app.muscleTone || app.yogaAura
+      ? `Body:${app.bodyStage || app.body}/tone ${app.muscleTone} · aura ${app.yogaAura}`
+      : null;
   return [
     `Hair: ${app.hairStyle} / ${app.hairColor}`,
     `Face: ${app.facialHair}`,
     `Wear: ${app.clothesLabels.top || "—"}, ${app.clothesLabels.bottom || "—"}, ${app.clothesLabels.shoes || "—"}`,
+    fit,
     temps ? `Now: ${temps}` : "No temporary effects"
-  ].join(" · ");
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
-/** Sync compact appearance into legacy world.avatar.appearance shape. */
 export function toLegacyAppearance(state, now = Date.now()) {
   const app = getEffectiveAppearance(state, now);
   return {
@@ -286,6 +280,9 @@ export function toLegacyAppearance(state, now = Date.now()) {
     hairColor: app.hairColor,
     facialHair: app.facialHair,
     worn: { ...app.clothes },
-    temps: [...app.temps]
+    temps: [...app.temps],
+    bodyStage: app.bodyStage,
+    muscleTone: app.muscleTone,
+    yogaAura: app.yogaAura
   };
 }

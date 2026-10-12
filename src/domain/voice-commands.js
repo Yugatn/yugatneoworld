@@ -1,6 +1,4 @@
-/**
- * Voice command parser for Yugatn eWorld.
- */
+/** Voice command parser for Yugatn eWorld. */
 
 /** @typedef {{ id: string, label: string, aliases: string[] }} VoiceCommandDef */
 
@@ -62,6 +60,10 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "cinema.invite", label: "Invite to cinema", aliases: ["invite to cinema", "invite friends to watch", "пригласить в кино", "пригласить друзей в кино", "смотреть кино вместе"] },
   { id: "podcast.play", label: "Play podcast", aliases: ["podcast", "play podcast", "listen to podcast", "подкаст", "слушать подкаст", "включить подкаст"] },
   { id: "podcast.live", label: "Live podcast", aliases: ["live podcast", "podcast stream", "go live podcast", "прямой эфир", "трансляция подкаста", "эфир подкаста", "начать эфир"] },
+  { id: "wellness.gym", label: "Fitness / gym", aliases: ["gym", "fitness", "workout", "fitness center", "фитнес", "тренажёрный зал", "тренировка", "зал"] },
+  { id: "wellness.yoga", label: "Yoga", aliases: ["yoga", "yoga center", "йога", "йога центр", "занятие йогой"] },
+  { id: "wellness.doctor", label: "Book doctor", aliases: ["book doctor", "doctor appointment", "see a doctor", "запись к врачу", "записать к врачу", "врач"] },
+  { id: "wellness.consent", label: "Wellness consent", aliases: ["fitness consent", "avatar fitness consent", "согласие на фитнес", "согласие на данные фитнеса", "согласие йога"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
