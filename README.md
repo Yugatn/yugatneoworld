@@ -2,12 +2,13 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
-## Payments & marketplace
+## Payments
 
-- **YC**: instant pay or **escrow** (hold → confirm / refund / auto-release)
-- **Receipts** and **seller ratings** (1–5) after completed deals
-- C2C marketplace (Avito-style)
-- Docs: [`docs/PAYMENTS_V0.1.md`](docs/PAYMENTS_V0.1.md) · [`docs/MARKETPLACE_V0.1.md`](docs/MARKETPLACE_V0.1.md)
+- **YC**: instant / escrow / receipts / seller ratings
+- **Crypto & P2P** (domain model): USDT·BTC·ETH·TON, pay intents, P2P offers, exchanger registry stubs
+- Docs: [`docs/PAYMENTS_V0.1.md`](docs/PAYMENTS_V0.1.md) · [`docs/CRYPTO_P2P_V0.1.md`](docs/CRYPTO_P2P_V0.1.md)
+
+> Crypto module is **symbolic** — no private keys, no on-chain settlement in this version.
 
 ## Security
 
@@ -22,7 +23,7 @@ npm test
 
 ## Status
 
-v0.27.0 — escrow auto-release, receipts, seller ratings.
+v0.28.0 — crypto pay + P2P exchangers, world v20.
 
 ## Author
 
