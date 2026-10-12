@@ -3,8 +3,10 @@ import { createInventory } from "./inventory.js";
 import { createSmartHome } from "./smart-home.js";
 import { createAvatarState, toLegacyAppearance } from "./avatar.js";
 import { createOrderBook } from "./commerce.js";
+import { createScheduleState } from "./schedule.js";
+import { createClassesState } from "./classes.js";
 
-export const WORLD_VERSION = 8;
+export const WORLD_VERSION = 9;
 
 export function createDefaultWorld() {
   const avatarState = createAvatarState();
@@ -19,13 +21,16 @@ export function createDefaultWorld() {
     inventory: createInventory(),
     apartment: createApartment(),
     smartHome: createSmartHome(),
-    /** Home delivery orders + supplies stock (pantry, bathroom cabinet, …) */
     commerce: createOrderBook(),
+    /** Sims-like life: lessons, training reminders */
+    schedule: createScheduleState(),
+    /** Classes + product presentations */
+    classes: createClassesState(),
     objects: [
       // —— Гостиная (livingRoom) ——
       { id:"mailbox",roomId:"livingRoom",type:"mailbox",name:"Mailbox",x:130,y:120,r:38,capabilities:["message.read","message.compose"] },
-      { id:"laptop",roomId:"livingRoom",type:"laptop",name:"Laptop",x:360,y:130,r:42,capabilities:["messenger","social","employment","shop.browse"] },
-      { id:"tv",roomId:"livingRoom",type:"tv",name:"Television",x:620,y:125,r:45,capabilities:["video","smarthome.tv"] },
+      { id:"laptop",roomId:"livingRoom",type:"laptop",name:"Laptop",x:360,y:130,r:42,capabilities:["messenger","social","employment","shop.browse","class.manage","presentation.host"] },
+      { id:"tv",roomId:"livingRoom",type:"tv",name:"Television",x:620,y:125,r:45,capabilities:["video","smarthome.tv","presentation.view"] },
       { id:"player",roomId:"livingRoom",type:"player",name:"Music Player",x:820,y:130,r:42,capabilities:["music","smarthome.music"] },
       { id:"sofa",roomId:"livingRoom",type:"sofa",name:"Sofa",x:480,y:320,r:50,capabilities:["social.relax","video"] },
       { id:"thermostat",roomId:"livingRoom",type:"thermostat",name:"Thermostat",x:250,y:380,r:36,capabilities:["smarthome.climate"] },
@@ -44,8 +49,9 @@ export function createDefaultWorld() {
       { id:"recipe-book",roomId:"kitchen",type:"book",name:"Recipe book",x:520,y:280,r:40,capabilities:["recipe.list","recipe.order"] },
       { id:"kitchen-switch",roomId:"kitchen",type:"switch",name:"Kitchen light",x:100,y:280,r:34,capabilities:["smarthome.lights"] },
       // —— Кабинет ——
-      { id:"study-laptop",roomId:"study",type:"laptop",name:"Work Laptop",x:350,y:160,r:42,capabilities:["messenger","social","employment","shop.browse"] },
+      { id:"study-laptop",roomId:"study",type:"laptop",name:"Work Laptop",x:350,y:160,r:42,capabilities:["messenger","social","employment","shop.browse","class.manage","presentation.host"] },
       { id:"study-books",roomId:"study",type:"books",name:"Bookshelf",x:720,y:160,r:42,capabilities:["books","education"] },
+      { id:"presentation-board",roomId:"study",type:"board",name:"Presentation board",x:500,y:300,r:44,capabilities:["presentation.host","presentation.view","class.manage"] },
       { id:"study-switch",roomId:"study",type:"switch",name:"Study light",x:100,y:280,r:34,capabilities:["smarthome.lights"] },
       // —— Спальня ——
       { id:"wardrobe",roomId:"bedroom",type:"wardrobe",name:"Wardrobe",x:300,y:160,r:45,capabilities:["avatar.edit","avatar.clothes"] },
@@ -58,11 +64,12 @@ export function createDefaultWorld() {
       { id:"cabinet",roomId:"bathroom",type:"cabinet",name:"Bathroom cabinet",x:850,y:200,r:40,capabilities:["shop.bathroom","supplies.view"] },
       { id:"toilet",roomId:"bathroom",type:"toilet",name:"Toilet",x:320,y:380,r:36,capabilities:["bathroom.use"] },
       { id:"bathroom-switch",roomId:"bathroom",type:"switch",name:"Bathroom light",x:100,y:280,r:34,capabilities:["smarthome.lights"] },
-      // —— Детская (kidsRoom) ——
+      // —— Детская ——
       { id:"kids-bed",roomId:"kidsRoom",type:"bed",name:"Kids bed",x:200,y:180,r:48,capabilities:["kids.rest"] },
       { id:"toy-box",roomId:"kidsRoom",type:"toys",name:"Toy box",x:450,y:160,r:42,capabilities:["kids.play","inventory"] },
-      { id:"kids-desk",roomId:"kidsRoom",type:"desk",name:"Study desk",x:720,y:160,r:42,capabilities:["education","kids.stories"] },
+      { id:"kids-desk",roomId:"kidsRoom",type:"desk",name:"Study desk",x:720,y:160,r:42,capabilities:["education","kids.stories","schedule.view"] },
       { id:"kids-shelf",roomId:"kidsRoom",type:"books",name:"Kids bookshelf",x:850,y:300,r:40,capabilities:["kids.stories","education"] },
+      { id:"kids-calendar",roomId:"kidsRoom",type:"calendar",name:"Kids calendar",x:300,y:320,r:40,capabilities:["schedule.view","schedule.edit","lesson.remind"] },
       { id:"kids-rug",roomId:"kidsRoom",type:"rug",name:"Play rug",x:400,y:360,r:50,capabilities:["kids.play"] },
       { id:"kids-switch",roomId:"kidsRoom",type:"switch",name:"Kids room light",x:100,y:280,r:34,capabilities:["smarthome.lights"] }
     ]
