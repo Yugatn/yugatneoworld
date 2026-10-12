@@ -1,8 +1,6 @@
+import { GAME_CATALOG, createTournament } from "../src/domain/game-tournaments.js";
 const STORAGE_KEY = "yugatn-eworld:game-tournaments:v1";
-const GAME_LABELS = {
-  chess: "Шахматы", checkers: "Шашки", monopoly: "Монополия",
-  "tic-tac-toe": "Крестики-нолики", sudoku: "Судоку", logic: "Логические дуэли"
-};
+const GAME_LABELS = Object.fromEntries(Object.entries(GAME_CATALOG).map(([id, game]) => [id, game.name]));
 const FORMAT_LABELS = { "single-elimination": "На выбывание", "round-robin": "Круговой" };
 const $ = (id) => document.getElementById(id);
 function safeRead() {
@@ -14,19 +12,6 @@ function safeRead() {
 function safeWrite(items) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); return true; }
   catch { return false; }
-}
-function makeTournament({ name, game, format, player }, now = Date.now(), id = crypto.randomUUID()) {
-  const clean = (v, max) => String(v ?? "").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, max);
-  const tournamentName = clean(name, 64);
-  const playerName = clean(player, 24);
-  if (!tournamentName || !playerName) throw new TypeError("Название и псевдоним обязательны");
-  if (!Object.hasOwn(GAME_LABELS, game)) throw new TypeError("Неизвестная игра");
-  if (!Object.hasOwn(FORMAT_LABELS, format)) throw new TypeError("Неизвестный формат");
-  return {
-    id, name: tournamentName, game, format, createdAt: now,
-    status: "registration", participants: [{ id: "local-player", name: playerName }],
-    note: "Локальный прототип; регистрация не опубликована на сервере."
-  };
 }
 function renderTournaments() {
   const host = $("tournaments");
@@ -58,7 +43,7 @@ function renderTournaments() {
 $("tournamentForm").addEventListener("submit", (event) => {
   event.preventDefault();
   try {
-    const item = makeTournament({
+    const item = createTournament({
       name: $("tName").value, game: $("tGame").value,
       format: $("tFormat").value, player: $("tPlayer").value
     });
