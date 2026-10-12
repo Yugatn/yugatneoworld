@@ -9,6 +9,9 @@ import { createSchoolModeState } from "./school-mode.js";
 import { createAccessState } from "./access-control.js";
 import { createEmbedsState } from "./embeds.js";
 import { createBulletinState } from "./bulletin-board.js";
+import { createAvatarShopState } from "./avatar-shop.js";
+import { createTravelState } from "./travel-tickets.js";
+import { createCinemaState } from "./cinema.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -43,6 +46,9 @@ function ensureLife(data) {
   data.access = createAccessState(data.access || {});
   data.embeds = createEmbedsState(data.embeds || {});
   data.bulletin = createBulletinState(data.bulletin || {});
+  data.avatarShop = createAvatarShopState(data.avatarShop || {});
+  data.travel = createTravelState(data.travel || {});
+  data.cinema = createCinemaState(data.cinema || {});
   return data;
 }
 
@@ -57,6 +63,9 @@ function fillDefaults(fresh) {
   if (!fresh.access) fresh.access = createAccessState();
   if (!fresh.embeds) fresh.embeds = createEmbedsState();
   if (!fresh.bulletin) fresh.bulletin = createBulletinState();
+  if (!fresh.avatarShop) fresh.avatarShop = createAvatarShopState();
+  if (!fresh.travel) fresh.travel = createTravelState();
+  if (!fresh.cinema) fresh.cinema = createCinemaState();
   return fresh;
 }
 
@@ -103,6 +112,9 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.access) fresh.access = createAccessState(data.access);
       if (data.embeds) fresh.embeds = createEmbedsState(data.embeds);
       if (data.bulletin) fresh.bulletin = createBulletinState(data.bulletin);
+      if (data.avatarShop) fresh.avatarShop = createAvatarShopState(data.avatarShop);
+      if (data.travel) fresh.travel = createTravelState(data.travel);
+      if (data.cinema) fresh.cinema = createCinemaState(data.cinema);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
