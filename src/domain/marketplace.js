@@ -1,13 +1,22 @@
 /**
  * Peer-to-peer marketplace (Avito-style classifieds).
- * Users list goods; buyers pay in YC or mark "meet / arrange" without auto-pay.
- * Affordable defaults; not a fiat exchange.
+ * Payments via payments.js: instant YC or escrow.
  */
 
-import { transfer, ensureWallet, getBalance, debit } from "./currency.js";
+import { ensureWallet, getBalance } from "./currency.js";
 import { sanitizeText } from "./security.js";
+import {
+  createPayment,
+  releaseEscrow,
+  refundEscrow
+} from "./payments.js";
 
-export const LISTING_STATUSES = Object.freeze(["active", "reserved", "sold", "withdrawn"]);
+export const LISTING_STATUSES = Object.freeze([
+  "active",
+  "reserved",
+  "sold",
+  "withdrawn"
+]);
 
 export const CATEGORIES = Object.freeze([
   { id: "electronics", name: "Электроника", nameEn: "Electronics" },
@@ -22,7 +31,6 @@ export const CATEGORIES = Object.freeze([
 
 export const CONDITIONS = Object.freeze(["new", "like_new", "used", "for_parts"]);
 
-/** Soft fee on completed YC deals (taken from seller after transfer). */
 export const PLATFORM_FEE_RATE = 0.02;
 export const MAX_ACTIVE_PER_SELLER = 30;
 export const MAX_PRICE_YC = 50_000;
@@ -86,6 +94,7 @@ export function createListing(state, {
   priceYc = 1,
   city = "",
   settlement = "yc",
+  preferEscrow = false,
   photos = []
 } = {}) {
   const sid = String(sellerId || "local");
@@ -117,6 +126,7 @@ export function createListing(state, {
     priceYc: price,
     city: sanitizeText(city, { maxLen: 40 }),
     settlement: settle,
+    preferEscrow: Boolean(preferEscrow),
     photos: (Array.isArray(photos) ? photos : [])
       .map((p) => String(p).slice(0, 200))
       .slice(0, 5),
@@ -125,7 +135,8 @@ export function createListing(state, {
     updatedAt: Date.now(),
     reservedBy: null,
     soldTo: null,
-    soldAt: null
+    soldAt: null,
+    paymentOrderId: null
   };
   state.listings.push(listing);
   return { ok: true, listing: { ...listing } };
@@ -160,6 +171,7 @@ export function updateListing(state, listingId, sellerId, patch = {}) {
   if (patch.settlement != null && ["yc", "meet", "either"].includes(patch.settlement)) {
     listing.settlement = patch.settlement;
   }
+  if (patch.preferEscrow != null) listing.preferEscrow = Boolean(patch.preferEscrow);
   listing.updatedAt = Date.now();
   return { ok: true, listing: { ...listing } };
 }
@@ -215,9 +227,24 @@ export function getListing(state, listingId) {
 }
 
 /**
- * Buy with YC: buyer pays full price to seller; small platform fee debited from seller (burn/fee).
+ * Checkout: instant YC or escrow.
+ * escrow=true | listing.preferEscrow → hold funds until confirmPurchase.
  */
-export function purchaseListing(state, currencyState, { listingId, buyerId } = {}) {
+export function purchaseListing(
+  state,
+  currencyState,
+  paymentsState,
+  { listingId, buyerId, escrow = null } = {}
+) {
+  // Back-compat: old signature purchaseListing(state, currency, { listingId, buyerId })
+  if (paymentsState && typeof paymentsState === "object" && paymentsState.listingId) {
+    const opts = paymentsState;
+    paymentsState = null;
+    listingId = opts.listingId;
+    buyerId = opts.buyerId;
+    escrow = opts.escrow;
+  }
+
   const listing = state.listings.find((l) => l.id === listingId);
   if (!listing) return { ok: false, reason: "not_found" };
   if (listing.status !== "active" && listing.status !== "reserved") {
@@ -228,51 +255,115 @@ export function purchaseListing(state, currencyState, { listingId, buyerId } = {
     return { ok: false, reason: "meet_only", message: "Seller accepts meet/arrange only" };
   }
 
-  const price = listing.priceYc;
-  if (price <= 0) {
-    listing.status = "sold";
-    listing.soldTo = String(buyerId);
-    listing.soldAt = Date.now();
-    listing.updatedAt = Date.now();
-    return { ok: true, listing: { ...listing }, paid: 0, fee: 0 };
+  const useEscrow =
+    escrow === true || (escrow !== false && listing.preferEscrow === true);
+  const method = useEscrow ? "yc_escrow" : "yc_instant";
+
+  // Without payments state — legacy instant path via createPayment still needs paymentsState
+  if (!paymentsState) {
+    return { ok: false, reason: "payments_required" };
   }
 
   ensureWallet(currencyState, buyerId);
   ensureWallet(currencyState, listing.sellerId);
-  if (getBalance(currencyState, buyerId) < price) {
-    return { ok: false, reason: "insufficient_funds" };
-  }
 
-  const fee = Math.round(price * PLATFORM_FEE_RATE * 100) / 100;
-  const sellerGets = Math.round((price - fee) * 100) / 100;
-
-  const tx = transfer(currencyState, buyerId, listing.sellerId, price, {
-    note: `marketplace:${listing.id}`
+  const pay = createPayment(paymentsState, currencyState, {
+    buyerId,
+    sellerId: listing.sellerId,
+    amount: listing.priceYc,
+    method,
+    refType: "marketplace",
+    refId: listing.id,
+    note: listing.title.slice(0, 80),
+    platformFeeRate: PLATFORM_FEE_RATE,
+    autoComplete: true
   });
-  if (!tx.ok) return tx;
+  if (!pay.ok) return pay;
 
-  if (fee > 0) {
-    debit(currencyState, listing.sellerId, fee, {
-      type: "fee",
-      note: `marketplace_fee:${listing.id}`
-    });
+  listing.paymentOrderId = pay.order.id;
+  listing.soldTo = String(buyerId);
+  listing.updatedAt = Date.now();
+  listing.reservedBy = null;
+
+  if (method === "yc_instant") {
+    listing.status = "sold";
+    listing.soldAt = Date.now();
+  } else {
+    // escrow: reserved until release
+    listing.status = "reserved";
+    listing.reservedBy = String(buyerId);
   }
+
+  return {
+    ok: true,
+    listing: { ...listing },
+    order: pay.order,
+    method,
+    paid: listing.priceYc,
+    fee: pay.order.fee,
+    buyerBalance: getBalance(currencyState, buyerId),
+    sellerBalance: getBalance(currencyState, listing.sellerId)
+  };
+}
+
+/** Buyer confirms receipt → release escrow, mark sold. */
+export function confirmPurchase(
+  state,
+  currencyState,
+  paymentsState,
+  { listingId, buyerId } = {}
+) {
+  const listing = state.listings.find((l) => l.id === listingId);
+  if (!listing) return { ok: false, reason: "not_found" };
+  if (!listing.paymentOrderId) return { ok: false, reason: "no_payment" };
+  if (String(buyerId) !== listing.soldTo && String(buyerId) !== listing.reservedBy) {
+    return { ok: false, reason: "not_buyer" };
+  }
+
+  const rel = releaseEscrow(paymentsState, currencyState, listing.paymentOrderId, {
+    actorId: buyerId
+  });
+  if (!rel.ok) return rel;
 
   listing.status = "sold";
-  listing.soldTo = String(buyerId);
   listing.soldAt = Date.now();
+  listing.soldTo = String(buyerId);
   listing.reservedBy = null;
   listing.updatedAt = Date.now();
 
   return {
     ok: true,
     listing: { ...listing },
-    paid: price,
-    sellerReceived: sellerGets,
-    fee,
-    buyerBalance: getBalance(currencyState, buyerId),
-    sellerBalance: getBalance(currencyState, listing.sellerId)
+    order: rel.order,
+    sellerReceived: rel.sellerReceived,
+    fee: rel.fee
   };
+}
+
+/** Cancel escrow deal → refund buyer, listing active again. */
+export function cancelPurchase(
+  state,
+  currencyState,
+  paymentsState,
+  { listingId, actorId, reason = "cancelled" } = {}
+) {
+  const listing = state.listings.find((l) => l.id === listingId);
+  if (!listing) return { ok: false, reason: "not_found" };
+  if (!listing.paymentOrderId) return { ok: false, reason: "no_payment" };
+
+  const ref = refundEscrow(paymentsState, currencyState, listing.paymentOrderId, {
+    actorId,
+    reason
+  });
+  if (!ref.ok) return ref;
+
+  listing.status = "active";
+  listing.soldTo = null;
+  listing.reservedBy = null;
+  listing.paymentOrderId = null;
+  listing.updatedAt = Date.now();
+
+  return { ok: true, listing: { ...listing }, order: ref.order };
 }
 
 export function reserveListing(state, listingId, buyerId) {
@@ -290,6 +381,9 @@ export function releaseReservation(state, listingId, actorId) {
   const listing = state.listings.find((l) => l.id === listingId);
   if (!listing) return { ok: false, reason: "not_found" };
   if (listing.status !== "reserved") return { ok: false, reason: "not_reserved" };
+  if (listing.paymentOrderId) {
+    return { ok: false, reason: "payment_in_progress", message: "Use cancelPurchase for escrow" };
+  }
   const actor = String(actorId);
   if (listing.sellerId !== actor && listing.reservedBy !== actor) {
     return { ok: false, reason: "not_allowed" };
@@ -307,6 +401,7 @@ export function markSoldMeet(state, listingId, sellerId, buyerId = null) {
   if (listing.status === "sold" || listing.status === "withdrawn") {
     return { ok: false, reason: "not_available" };
   }
+  if (listing.paymentOrderId) return { ok: false, reason: "payment_in_progress" };
   listing.status = "sold";
   listing.soldTo = buyerId ? String(buyerId) : listing.reservedBy;
   listing.soldAt = Date.now();
