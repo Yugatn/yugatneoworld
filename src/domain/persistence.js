@@ -21,6 +21,7 @@ import { createVotingState } from "./voting.js";
 import { createSecurityState } from "./security.js";
 import { createMarketplaceState, seedDemoListings } from "./marketplace.js";
 import { createPaymentsState } from "./payments.js";
+import { createCryptoP2PState } from "./crypto-p2p.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -71,6 +72,7 @@ function ensureLife(data) {
   data.security = createSecurityState(data.security || {});
   ensureMarketplace(data);
   data.payments = createPaymentsState(data.payments || {});
+  data.cryptoP2p = createCryptoP2PState(data.cryptoP2p || {});
   return data;
 }
 
@@ -103,6 +105,7 @@ function fillDefaults(fresh) {
     seedDemoListings(fresh.marketplace);
   }
   if (!fresh.payments) fresh.payments = createPaymentsState();
+  if (!fresh.cryptoP2p) fresh.cryptoP2p = createCryptoP2PState();
   return fresh;
 }
 
@@ -168,6 +171,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
         seedDemoListings(fresh.marketplace);
       }
       if (data.payments) fresh.payments = createPaymentsState(data.payments);
+      if (data.cryptoP2p) fresh.cryptoP2p = createCryptoP2PState(data.cryptoP2p);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
