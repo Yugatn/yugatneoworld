@@ -12,6 +12,7 @@ import { createBulletinState } from "./bulletin-board.js";
 import { createAvatarShopState } from "./avatar-shop.js";
 import { createTravelState } from "./travel-tickets.js";
 import { createCinemaState } from "./cinema.js";
+import { createPodcastState } from "./podcasts.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -49,6 +50,7 @@ function ensureLife(data) {
   data.avatarShop = createAvatarShopState(data.avatarShop || {});
   data.travel = createTravelState(data.travel || {});
   data.cinema = createCinemaState(data.cinema || {});
+  data.podcasts = createPodcastState(data.podcasts || {});
   return data;
 }
 
@@ -66,6 +68,7 @@ function fillDefaults(fresh) {
   if (!fresh.avatarShop) fresh.avatarShop = createAvatarShopState();
   if (!fresh.travel) fresh.travel = createTravelState();
   if (!fresh.cinema) fresh.cinema = createCinemaState();
+  if (!fresh.podcasts) fresh.podcasts = createPodcastState();
   return fresh;
 }
 
@@ -115,6 +118,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.avatarShop) fresh.avatarShop = createAvatarShopState(data.avatarShop);
       if (data.travel) fresh.travel = createTravelState(data.travel);
       if (data.cinema) fresh.cinema = createCinemaState(data.cinema);
+      if (data.podcasts) fresh.podcasts = createPodcastState(data.podcasts);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);

@@ -1,7 +1,5 @@
 /**
  * Voice command parser for Yugatn eWorld.
- * Maps free-form speech (ru/en) to action ids. Browser SpeechRecognition
- * supplies the transcript; this module stays pure for Node tests.
  */
 
 /** @typedef {{ id: string, label: string, aliases: string[] }} VoiceCommandDef */
@@ -62,6 +60,8 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "travel.air", label: "Air tickets", aliases: ["air tickets", "flight tickets", "buy flight", "авиабилеты", "билет на самолёт", "самолёт"] },
   { id: "travel.rail", label: "Rail tickets", aliases: ["train tickets", "rail tickets", "buy train", "билеты на поезд", "жд билеты", "поезд"] },
   { id: "cinema.invite", label: "Invite to cinema", aliases: ["invite to cinema", "invite friends to watch", "пригласить в кино", "пригласить друзей в кино", "смотреть кино вместе"] },
+  { id: "podcast.play", label: "Play podcast", aliases: ["podcast", "play podcast", "listen to podcast", "подкаст", "слушать подкаст", "включить подкаст"] },
+  { id: "podcast.live", label: "Live podcast", aliases: ["live podcast", "podcast stream", "go live podcast", "прямой эфир", "трансляция подкаста", "эфир подкаста", "начать эфир"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
@@ -76,7 +76,6 @@ function normalize(text) {
 export function matchVoiceCommand(transcript) {
   const t = normalize(transcript);
   if (!t || t.length < 2) return null;
-
   let best = null;
   for (const cmd of VOICE_COMMANDS) {
     for (const alias of cmd.aliases) {
