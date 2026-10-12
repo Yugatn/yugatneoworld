@@ -4,7 +4,7 @@
  * Affordable defaults; not a fiat exchange.
  */
 
-import { transfer, ensureWallet, getBalance } from "./currency.js";
+import { transfer, ensureWallet, getBalance, debit } from "./currency.js";
 import { sanitizeText } from "./security.js";
 
 export const LISTING_STATUSES = Object.freeze(["active", "reserved", "sold", "withdrawn"]);
@@ -22,7 +22,7 @@ export const CATEGORIES = Object.freeze([
 
 export const CONDITIONS = Object.freeze(["new", "like_new", "used", "for_parts"]);
 
-/** Soft fee on completed YC deals (seller pays), keeps economy modest. */
+/** Soft fee on completed YC deals (taken from seller after transfer). */
 export const PLATFORM_FEE_RATE = 0.02;
 export const MAX_ACTIVE_PER_SELLER = 30;
 export const MAX_PRICE_YC = 50_000;
@@ -37,15 +37,11 @@ function categoryOk(id) {
 
 export function createMarketplaceState(seed = {}) {
   return {
-    listings: Array.isArray(seed.listings)
-      ? seed.listings.map((l) => ({ ...l }))
-      : [],
-    /** optional demo seed flag */
+    listings: Array.isArray(seed.listings) ? seed.listings.map((l) => ({ ...l })) : [],
     seeded: Boolean(seed.seeded)
   };
 }
 
-/** Sample listings for empty world (demo street market). */
 export function seedDemoListings(state, { sellerId = "demo_seller" } = {}) {
   if (state.seeded || state.listings.length > 0) return state;
   const samples = [
@@ -89,7 +85,7 @@ export function createListing(state, {
   condition = "used",
   priceYc = 1,
   city = "",
-  settlement = "yc", // yc | meet | either
+  settlement = "yc",
   photos = []
 } = {}) {
   const sid = String(sellerId || "local");
@@ -121,7 +117,6 @@ export function createListing(state, {
     priceYc: price,
     city: sanitizeText(city, { maxLen: 40 }),
     settlement: settle,
-    /** photo URLs or ids — stored as short strings only */
     photos: (Array.isArray(photos) ? photos : [])
       .map((p) => String(p).slice(0, 200))
       .slice(0, 5),
@@ -220,13 +215,9 @@ export function getListing(state, listingId) {
 }
 
 /**
- * Buy with YC transfer seller ← buyer (minus small platform fee burned from seller side conceptually:
- * buyer pays full price; seller receives price * (1 - fee); fee is burned).
+ * Buy with YC: buyer pays full price to seller; small platform fee debited from seller (burn/fee).
  */
-export function purchaseListing(state, currencyState, {
-  listingId,
-  buyerId
-} = {}) {
+export function purchaseListing(state, currencyState, { listingId, buyerId } = {}) {
   const listing = state.listings.find((l) => l.id === listingId);
   if (!listing) return { ok: false, reason: "not_found" };
   if (listing.status !== "active" && listing.status !== "reserved") {
@@ -260,9 +251,7 @@ export function purchaseListing(state, currencyState, {
   });
   if (!tx.ok) return tx;
 
-  // Burn fee from seller (platform)
   if (fee > 0) {
-    const { debit } = awaitableDebit();
     debit(currencyState, listing.sellerId, fee, {
       type: "fee",
       note: `marketplace_fee:${listing.id}`
@@ -285,17 +274,6 @@ export function purchaseListing(state, currencyState, {
     sellerBalance: getBalance(currencyState, listing.sellerId)
   };
 }
-
-/** Local import of debit without circular top-level issues. */
-function awaitableDebit() {
-  return requireDebit();
-}
-function requireDebit() {
-  // dynamic style: re-use currency.debit via already-imported transfer path — import debit statically
-  return { debit: debitFn };
-}
-
-import { debit as debitFn } from "./currency.js";
 
 export function reserveListing(state, listingId, buyerId) {
   const listing = state.listings.find((l) => l.id === listingId);
@@ -322,7 +300,6 @@ export function releaseReservation(state, listingId, actorId) {
   return { ok: true, listing: { ...listing } };
 }
 
-/** Mark sold without YC (meet in person / external deal). */
 export function markSoldMeet(state, listingId, sellerId, buyerId = null) {
   const listing = state.listings.find((l) => l.id === listingId);
   if (!listing) return { ok: false, reason: "not_found" };
