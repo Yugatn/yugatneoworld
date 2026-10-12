@@ -71,6 +71,7 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "voting.open", label: "Voting", aliases: ["vote", "voting", "poll", "голосование", "голосовать", "опрос"] },
   { id: "identity.verify", label: "Identity verification", aliases: ["verify identity", "verification", "верификация", "подтвердить личность", "верифицировать"] },
   { id: "currency.balance", label: "Currency balance", aliases: ["balance", "my balance", "wallet", "баланс", "мой баланс", "кошелёк", "югатн коин"] },
+  { id: "security.status", label: "Security", aliases: ["security", "security status", "privacy", "безопасность", "защита данных", "приватность"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 

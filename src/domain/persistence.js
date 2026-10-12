@@ -18,6 +18,7 @@ import { createHealthState } from "./health.js";
 import { createCurrencyState, ensureWallet } from "./currency.js";
 import { createIdentityState } from "./identity-verify.js";
 import { createVotingState } from "./voting.js";
+import { createSecurityState } from "./security.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -59,6 +60,7 @@ function ensureLife(data) {
   ensureWallet(data.currency, "local");
   data.identity = createIdentityState(data.identity || {});
   data.voting = createVotingState(data.voting || {});
+  data.security = createSecurityState(data.security || {});
   return data;
 }
 
@@ -85,6 +87,7 @@ function fillDefaults(fresh) {
   }
   if (!fresh.identity) fresh.identity = createIdentityState();
   if (!fresh.voting) fresh.voting = createVotingState();
+  if (!fresh.security) fresh.security = createSecurityState();
   return fresh;
 }
 
@@ -143,6 +146,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       }
       if (data.identity) fresh.identity = createIdentityState(data.identity);
       if (data.voting) fresh.voting = createVotingState(data.voting);
+      if (data.security) fresh.security = createSecurityState(data.security);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
