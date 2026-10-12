@@ -15,6 +15,9 @@ import { createCinemaState } from "./cinema.js";
 import { createPodcastState } from "./podcasts.js";
 import { createWellnessState } from "./wellness.js";
 import { createHealthState } from "./health.js";
+import { createCurrencyState, ensureWallet } from "./currency.js";
+import { createIdentityState } from "./identity-verify.js";
+import { createVotingState } from "./voting.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -52,6 +55,10 @@ function ensureLife(data) {
   data.podcasts = createPodcastState(data.podcasts || {});
   data.wellness = createWellnessState(data.wellness || {});
   data.health = createHealthState(data.health || {});
+  data.currency = createCurrencyState(data.currency || {});
+  ensureWallet(data.currency, "local");
+  data.identity = createIdentityState(data.identity || {});
+  data.voting = createVotingState(data.voting || {});
   return data;
 }
 
@@ -72,6 +79,12 @@ function fillDefaults(fresh) {
   if (!fresh.podcasts) fresh.podcasts = createPodcastState();
   if (!fresh.wellness) fresh.wellness = createWellnessState();
   if (!fresh.health) fresh.health = createHealthState();
+  if (!fresh.currency) {
+    fresh.currency = createCurrencyState();
+    ensureWallet(fresh.currency, "local");
+  }
+  if (!fresh.identity) fresh.identity = createIdentityState();
+  if (!fresh.voting) fresh.voting = createVotingState();
   return fresh;
 }
 
@@ -124,6 +137,12 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.podcasts) fresh.podcasts = createPodcastState(data.podcasts);
       if (data.wellness) fresh.wellness = createWellnessState(data.wellness);
       if (data.health) fresh.health = createHealthState(data.health);
+      if (data.currency) {
+        fresh.currency = createCurrencyState(data.currency);
+        ensureWallet(fresh.currency, "local");
+      }
+      if (data.identity) fresh.identity = createIdentityState(data.identity);
+      if (data.voting) fresh.voting = createVotingState(data.voting);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);

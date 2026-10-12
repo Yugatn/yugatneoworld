@@ -68,6 +68,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "health.sick", label: "Feeling sick", aliases: ["i am sick", "feeling sick", "я заболел", "я болею", "плохо себя чувствую"] },
   { id: "health.treat", label: "Treat illness", aliases: ["take medicine", "treat myself", "полечиться", "принять лекарство", "аптечка"] },
   { id: "health.rest", label: "Rest / sleep", aliases: ["rest", "sleep", "go to bed", "отдохнуть", "поспать", "лечь спать"] },
+  { id: "voting.open", label: "Voting", aliases: ["vote", "voting", "poll", "голосование", "голосовать", "опрос"] },
+  { id: "identity.verify", label: "Identity verification", aliases: ["verify identity", "verification", "верификация", "подтвердить личность", "верифицировать"] },
+  { id: "currency.balance", label: "Currency balance", aliases: ["balance", "my balance", "wallet", "баланс", "мой баланс", "кошелёк", "югатн коин"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
