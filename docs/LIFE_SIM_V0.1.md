@@ -42,11 +42,17 @@ Subjects: math, language, science, art, sports, music, tech, other.
 
 **Where:** study board, living-room TV/laptop (`presentation.host` / `presentation.view`).
 
+## School mode
+
+Focused **home | school** layer on the same data — see `docs/SCHOOL_MODE_V0.1.md`.
+Not a separate application; `?mode=school` and voice «режим школы».
+
 ## Voice
 
 - расписание / schedule
 - создать класс / classes
 - презентация / presentations
+- режим школы / school mode · выйти из школы / exit school
 
 ## Not in v0.1
 

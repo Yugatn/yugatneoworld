@@ -53,6 +53,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "class.create", label: "Create class", aliases: ["create class", "new class", "создать класс", "новый класс"] },
   { id: "presentation.list", label: "Presentations", aliases: ["presentations", "product pitch", "презентации", "презентация продукта"] },
   { id: "presentation.host", label: "Host presentation", aliases: ["host presentation", "start pitch", "провести презентацию", "презентация"] },
+  // School mode (focused layer, not a separate app)
+  { id: "school.enter", label: "School mode", aliases: ["school mode", "enter school", "режим школы", "школьный режим", "школа", "режим школа", "в школу"] },
+  { id: "school.exit", label: "Exit school mode", aliases: ["exit school", "leave school", "выйти из школы", "домой из школы", "выйти из школьного режима", "закрыть школу"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 

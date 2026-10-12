@@ -5,6 +5,7 @@ import { createAvatarState, toLegacyAppearance } from "./avatar.js";
 import { createOrderBook } from "./commerce.js";
 import { createScheduleState } from "./schedule.js";
 import { createClassesState } from "./classes.js";
+import { createSchoolModeState } from "./school-mode.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -35,6 +36,7 @@ function ensureCommerce(data) {
 function ensureLife(data) {
   data.schedule = createScheduleState(data.schedule || {});
   data.classes = createClassesState(data.classes || {});
+  data.schoolMode = createSchoolModeState(data.schoolMode || {});
   return data;
 }
 
@@ -49,6 +51,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (!fresh.commerce) fresh.commerce = createOrderBook();
       if (!fresh.schedule) fresh.schedule = createScheduleState();
       if (!fresh.classes) fresh.classes = createClassesState();
+      if (!fresh.schoolMode) fresh.schoolMode = createSchoolModeState();
       return fresh;
     }
     const data = JSON.parse(raw);
@@ -60,6 +63,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (!fresh.commerce) fresh.commerce = createOrderBook();
       if (!fresh.schedule) fresh.schedule = createScheduleState();
       if (!fresh.classes) fresh.classes = createClassesState();
+      if (!fresh.schoolMode) fresh.schoolMode = createSchoolModeState();
       return fresh;
     }
     if (data.version !== WORLD_VERSION) {
@@ -103,6 +107,9 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.classes) {
         fresh.classes = createClassesState(data.classes);
       }
+      if (data.schoolMode) {
+        fresh.schoolMode = createSchoolModeState(data.schoolMode);
+      }
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
@@ -121,6 +128,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
     if (!fresh.commerce) fresh.commerce = createOrderBook();
     if (!fresh.schedule) fresh.schedule = createScheduleState();
     if (!fresh.classes) fresh.classes = createClassesState();
+    if (!fresh.schoolMode) fresh.schoolMode = createSchoolModeState();
     return fresh;
   }
 }

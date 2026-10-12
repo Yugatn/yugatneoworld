@@ -8,6 +8,13 @@ A social network designed as a navigable 2D world rather than a conventional pro
 - Stable `subjectId` stored in the browser; no server password or OAuth in v0.1.
 - Multiplayer display name follows the active session.
 
+## School mode (not a separate app)
+
+- Focused layer for **students, teachers, parents**: today's schedule, classes, homework, presentations.
+- Same `schedule` + `classes` data; enter/exit without leaving eWorld.
+- Deep link: `?mode=school` · voice: «режим школы» / «выйти из школы».
+- See `docs/SCHOOL_MODE_V0.1.md` and `docs/LIFE_SIM_V0.1.md`.
+
 ## Home delivery (whole network)
 
 - Order **grocery, bathroom, household, cafe/restaurant** items with delivery into apartment **supplies**.
@@ -39,7 +46,7 @@ A social network designed as a navigable 2D world rather than a conventional pro
 
 ## Voice commands
 
-- **🎙** / **V**: door, rooms, shop, recipes, shower/bath, smart home, avatar, help (ru/en).
+- **🎙** / **V**: door, rooms, shop, recipes, shower/bath, smart home, avatar, school mode, help (ru/en).
 
 ## Temporary keys · Visits · Cinema · Multiplayer
 
@@ -67,9 +74,9 @@ Controls: WASD / drag / joystick · **E** interact · **V** voice · **Esc** clo
 
 ## Status
 
-v0.12.0 — prior features + **bathroom** + **universal home delivery** + **kitchen recipes with ingredient orders**.
+v0.15.0 — **school mode** (focused schedule/classes layer) + prior life-sim, bathroom, delivery, recipes, avatar, smart home.
 
-Still boundaries: real payments, courier NPC, full canvas UI body restore, server auth.
+Still boundaries: real payments, courier NPC, full canvas UI body restore, server auth, LMS grades.
 
 ## Author
 
