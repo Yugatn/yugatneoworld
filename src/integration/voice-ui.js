@@ -80,6 +80,9 @@ export function runVoiceCommand(id, api) {
     case "school.teacher":
       api.enterAsTeacher?.() ?? api.enterSchoolMode?.({ role: "teacher" });
       break;
+    case "school.admin":
+      api.enterAsAdmin?.() ?? api.enterSchoolMode?.({ role: "admin" });
+      break;
     case "school.exit":
       api.exitSchoolMode?.();
       break;
@@ -100,6 +103,15 @@ export function runVoiceCommand(id, api) {
       break;
     case "presentation.host":
       api.hostPresentation?.();
+      break;
+    case "bulletin.view":
+      api.openBulletin?.();
+      break;
+    case "bulletin.post":
+      api.createAnnouncementPrompt?.();
+      break;
+    case "embed.attach":
+      api.attachEmbedPrompt?.();
       break;
     case "help":
       api.show("\ud83c\udf99 Voice commands", listVoiceHelp().slice(0, 16).join(". ") + ".", [
