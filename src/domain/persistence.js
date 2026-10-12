@@ -3,6 +3,8 @@ import { createInventory } from "./inventory.js";
 import { createSmartHome } from "./smart-home.js";
 import { createAvatarState, toLegacyAppearance } from "./avatar.js";
 import { createOrderBook } from "./commerce.js";
+import { createScheduleState } from "./schedule.js";
+import { createClassesState } from "./classes.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -30,6 +32,12 @@ function ensureCommerce(data) {
   return data;
 }
 
+function ensureLife(data) {
+  data.schedule = createScheduleState(data.schedule || {});
+  data.classes = createClassesState(data.classes || {});
+  return data;
+}
+
 export function loadWorld(fallback = createDefaultWorld()) {
   try {
     const raw = localStorage.getItem(KEY);
@@ -39,6 +47,8 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (!fresh.smartHome) fresh.smartHome = createSmartHome();
       if (!fresh.avatarState) fresh.avatarState = createAvatarState();
       if (!fresh.commerce) fresh.commerce = createOrderBook();
+      if (!fresh.schedule) fresh.schedule = createScheduleState();
+      if (!fresh.classes) fresh.classes = createClassesState();
       return fresh;
     }
     const data = JSON.parse(raw);
@@ -48,6 +58,8 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (!fresh.smartHome) fresh.smartHome = createSmartHome();
       if (!fresh.avatarState) fresh.avatarState = createAvatarState();
       if (!fresh.commerce) fresh.commerce = createOrderBook();
+      if (!fresh.schedule) fresh.schedule = createScheduleState();
+      if (!fresh.classes) fresh.classes = createClassesState();
       return fresh;
     }
     if (data.version !== WORLD_VERSION) {
@@ -59,7 +71,6 @@ export function loadWorld(fallback = createDefaultWorld()) {
         appearance: data.avatar.appearance || fresh.avatar.appearance
       };
       if (data.apartment?.currentRoom && fresh.apartment) {
-        // Keep room only if still valid in new map
         const roomIds = (fresh.apartment.rooms || []).map((r) => r.id);
         if (roomIds.includes(data.apartment.currentRoom)) {
           fresh.apartment.currentRoom = data.apartment.currentRoom;
@@ -86,6 +97,12 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.commerce) {
         fresh.commerce = createOrderBook(data.commerce);
       }
+      if (data.schedule) {
+        fresh.schedule = createScheduleState(data.schedule);
+      }
+      if (data.classes) {
+        fresh.classes = createClassesState(data.classes);
+      }
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
@@ -94,6 +111,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
     else data.smartHome = createSmartHome(data.smartHome);
     ensureAvatarState(data);
     ensureCommerce(data);
+    ensureLife(data);
     return data;
   } catch {
     const fresh = structuredClone(fallback);
@@ -101,6 +119,8 @@ export function loadWorld(fallback = createDefaultWorld()) {
     if (!fresh.smartHome) fresh.smartHome = createSmartHome();
     if (!fresh.avatarState) fresh.avatarState = createAvatarState();
     if (!fresh.commerce) fresh.commerce = createOrderBook();
+    if (!fresh.schedule) fresh.schedule = createScheduleState();
+    if (!fresh.classes) fresh.classes = createClassesState();
     return fresh;
   }
 }
