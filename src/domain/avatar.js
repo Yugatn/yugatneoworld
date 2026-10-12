@@ -1,6 +1,5 @@
 /**
- * Avatar appearance, clothing wardrobe, temporary overlays,
- * functional care, and wellness-driven body / yoga-aura (when consented).
+ * Avatar appearance, clothing, wellness & health visual overlays.
  * Pure domain — no DOM / network.
  */
 
@@ -49,7 +48,10 @@ export const TEMP_EFFECTS = Object.freeze({
   tired: { label: "Tired", durationMs: 2 * 60 * 60 * 1000 },
   dressed_up: { label: "Dressed up", durationMs: 8 * 60 * 60 * 1000 },
   post_workout: { label: "Post-workout glow", durationMs: 3 * 60 * 60 * 1000 },
-  yoga_aura: { label: "Yoga aura", durationMs: 12 * 60 * 60 * 1000 }
+  yoga_aura: { label: "Yoga aura", durationMs: 12 * 60 * 60 * 1000 },
+  sick: { label: "Unwell", durationMs: 24 * 60 * 60 * 1000 },
+  fever: { label: "Feverish", durationMs: 12 * 60 * 60 * 1000 },
+  pale: { label: "Pale", durationMs: 8 * 60 * 60 * 1000 }
 });
 
 export const STUBBLE_AFTER_MS = 18 * 60 * 60 * 1000;
@@ -59,6 +61,7 @@ export function createAvatarState(seed = {}) {
   const base = seed.base && typeof seed.base === "object" ? seed.base : {};
   const worn = seed.worn && typeof seed.worn === "object" ? seed.worn : {};
   const fitness = seed.fitness && typeof seed.fitness === "object" ? seed.fitness : {};
+  const health = seed.health && typeof seed.health === "object" ? seed.health : {};
   return {
     base: {
       body: BODY_TYPES.includes(base.body) ? base.body : "default",
@@ -81,11 +84,15 @@ export function createAvatarState(seed = {}) {
       : [],
     lastShaveAt: typeof seed.lastShaveAt === "number" ? seed.lastShaveAt : null,
     lastHaircutAt: typeof seed.lastHaircutAt === "number" ? seed.lastHaircutAt : null,
-    /** Wellness-driven visual layer (filled only with user consent via wellness module). */
     fitness: {
       bodyStage: fitness.bodyStage || null,
       muscleTone: typeof fitness.muscleTone === "number" ? fitness.muscleTone : 0,
       yogaAura: typeof fitness.yogaAura === "number" ? fitness.yogaAura : 0
+    },
+    health: {
+      status: health.status || "healthy",
+      energy: typeof health.energy === "number" ? health.energy : 80,
+      conditions: Array.isArray(health.conditions) ? [...health.conditions] : []
     }
   };
 }
@@ -134,6 +141,7 @@ export function getEffectiveAppearance(state, now = Date.now()) {
     else wornLabels[slot] = null;
   }
   const fitness = state.fitness || {};
+  const health = state.health || {};
   return {
     body: state.base.body,
     skin: state.base.skin,
@@ -150,10 +158,11 @@ export function getEffectiveAppearance(state, now = Date.now()) {
     temps: state.temps.map((t) => t.id),
     hair: state.base.hairStyle,
     clothesStyle: clothingStyleTag(state),
-    /** Renderer hooks for wellness visuals */
     bodyStage: fitness.bodyStage || null,
     muscleTone: fitness.muscleTone || 0,
-    yogaAura: fitness.yogaAura || 0
+    yogaAura: fitness.yogaAura || 0,
+    healthStatus: health.status || "healthy",
+    healthEnergy: health.energy ?? 80
   };
 }
 
@@ -216,12 +225,8 @@ export function shaveAtHome(state, now = Date.now()) {
 }
 
 export function haircutAtBarber(state, { style, color, now = Date.now() } = {}) {
-  if (style && HAIR_STYLES.includes(style)) {
-    state.base.hairStyle = style;
-  }
-  if (color && HAIR_COLORS.includes(color)) {
-    state.base.hairColor = color;
-  }
+  if (style && HAIR_STYLES.includes(style)) state.base.hairStyle = style;
+  if (color && HAIR_COLORS.includes(color)) state.base.hairColor = color;
   state.lastHaircutAt = now;
   applyTemp(state, "new_haircut", now);
   applyTemp(state, "wet_hair", now, TEMP_EFFECTS.wet_hair.durationMs);
@@ -252,18 +257,18 @@ export function listWardrobe(state) {
 
 export function summarizeAvatar(state, now = Date.now()) {
   const app = getEffectiveAppearance(state, now);
-  const temps = app.temps
-    .map((id) => TEMP_EFFECTS[id]?.label || id)
-    .join(", ");
+  const temps = app.temps.map((id) => TEMP_EFFECTS[id]?.label || id).join(", ");
   const fit =
     app.muscleTone || app.yogaAura
       ? `Body:${app.bodyStage || app.body}/tone ${app.muscleTone} · aura ${app.yogaAura}`
       : null;
+  const hl = app.healthStatus && app.healthStatus !== "healthy" ? `Health:${app.healthStatus}` : null;
   return [
     `Hair: ${app.hairStyle} / ${app.hairColor}`,
     `Face: ${app.facialHair}`,
     `Wear: ${app.clothesLabels.top || "—"}, ${app.clothesLabels.bottom || "—"}, ${app.clothesLabels.shoes || "—"}`,
     fit,
+    hl,
     temps ? `Now: ${temps}` : "No temporary effects"
   ]
     .filter(Boolean)
@@ -283,6 +288,8 @@ export function toLegacyAppearance(state, now = Date.now()) {
     temps: [...app.temps],
     bodyStage: app.bodyStage,
     muscleTone: app.muscleTone,
-    yogaAura: app.yogaAura
+    yogaAura: app.yogaAura,
+    healthStatus: app.healthStatus,
+    healthEnergy: app.healthEnergy
   };
 }

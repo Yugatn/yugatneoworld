@@ -64,6 +64,10 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "wellness.yoga", label: "Yoga", aliases: ["yoga", "yoga center", "йога", "йога центр", "занятие йогой"] },
   { id: "wellness.doctor", label: "Book doctor", aliases: ["book doctor", "doctor appointment", "see a doctor", "запись к врачу", "записать к врачу", "врач"] },
   { id: "wellness.consent", label: "Wellness consent", aliases: ["fitness consent", "avatar fitness consent", "согласие на фитнес", "согласие на данные фитнеса", "согласие йога"] },
+  { id: "health.status", label: "Health status", aliases: ["health", "my health", "how am i", "здоровье", "как самочувствие", "состояние здоровья"] },
+  { id: "health.sick", label: "Feeling sick", aliases: ["i am sick", "feeling sick", "я заболел", "я болею", "плохо себя чувствую"] },
+  { id: "health.treat", label: "Treat illness", aliases: ["take medicine", "treat myself", "полечиться", "принять лекарство", "аптечка"] },
+  { id: "health.rest", label: "Rest / sleep", aliases: ["rest", "sleep", "go to bed", "отдохнуть", "поспать", "лечь спать"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 

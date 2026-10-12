@@ -14,6 +14,7 @@ import { createTravelState } from "./travel-tickets.js";
 import { createCinemaState } from "./cinema.js";
 import { createPodcastState } from "./podcasts.js";
 import { createWellnessState } from "./wellness.js";
+import { createHealthState } from "./health.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -50,6 +51,7 @@ function ensureLife(data) {
   data.cinema = createCinemaState(data.cinema || {});
   data.podcasts = createPodcastState(data.podcasts || {});
   data.wellness = createWellnessState(data.wellness || {});
+  data.health = createHealthState(data.health || {});
   return data;
 }
 
@@ -69,6 +71,7 @@ function fillDefaults(fresh) {
   if (!fresh.cinema) fresh.cinema = createCinemaState();
   if (!fresh.podcasts) fresh.podcasts = createPodcastState();
   if (!fresh.wellness) fresh.wellness = createWellnessState();
+  if (!fresh.health) fresh.health = createHealthState();
   return fresh;
 }
 
@@ -120,6 +123,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.cinema) fresh.cinema = createCinemaState(data.cinema);
       if (data.podcasts) fresh.podcasts = createPodcastState(data.podcasts);
       if (data.wellness) fresh.wellness = createWellnessState(data.wellness);
+      if (data.health) fresh.health = createHealthState(data.health);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
