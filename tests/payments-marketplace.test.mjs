@@ -82,10 +82,11 @@ const esc2 = createPayment(pay, cur, {
   sellerId: "seller",
   amount: 12,
   method: "yc_escrow",
-  escrowTtlMs: 1
+  escrowTtlMs: 60_000
 });
-// force expired
-esc2.order.releaseAfter = Date.now() - 1;
+const held = pay.orders.find((o) => o.id === esc2.order.id);
+assert.ok(held);
+held.releaseAfter = Date.now() - 1;
 const auto = autoReleaseExpired(pay, cur);
 assert.ok(auto.released.includes(esc2.order.id));
 
@@ -137,6 +138,7 @@ const buy2 = purchaseListing(mp, cur, pay, {
   buyerId: "buyer",
   escrow: true
 });
+assert.equal(buy2.ok, true);
 assert.equal(
   cancelPurchase(mp, cur, pay, {
     listingId: l2.listing.id,
