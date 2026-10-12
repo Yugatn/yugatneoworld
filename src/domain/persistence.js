@@ -19,6 +19,7 @@ import { createCurrencyState, ensureWallet } from "./currency.js";
 import { createIdentityState } from "./identity-verify.js";
 import { createVotingState } from "./voting.js";
 import { createSecurityState } from "./security.js";
+import { createMarketplaceState, seedDemoListings } from "./marketplace.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -43,6 +44,12 @@ function ensureCommerce(data) {
   return data;
 }
 
+function ensureMarketplace(data) {
+  data.marketplace = createMarketplaceState(data.marketplace || {});
+  if (!data.marketplace.listings.length) seedDemoListings(data.marketplace);
+  return data;
+}
+
 function ensureLife(data) {
   data.schedule = createScheduleState(data.schedule || {});
   data.classes = createClassesState(data.classes || {});
@@ -61,6 +68,7 @@ function ensureLife(data) {
   data.identity = createIdentityState(data.identity || {});
   data.voting = createVotingState(data.voting || {});
   data.security = createSecurityState(data.security || {});
+  ensureMarketplace(data);
   return data;
 }
 
@@ -88,6 +96,10 @@ function fillDefaults(fresh) {
   if (!fresh.identity) fresh.identity = createIdentityState();
   if (!fresh.voting) fresh.voting = createVotingState();
   if (!fresh.security) fresh.security = createSecurityState();
+  if (!fresh.marketplace) {
+    fresh.marketplace = createMarketplaceState();
+    seedDemoListings(fresh.marketplace);
+  }
   return fresh;
 }
 
@@ -147,6 +159,11 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.identity) fresh.identity = createIdentityState(data.identity);
       if (data.voting) fresh.voting = createVotingState(data.voting);
       if (data.security) fresh.security = createSecurityState(data.security);
+      if (data.marketplace) {
+        fresh.marketplace = createMarketplaceState(data.marketplace);
+      } else {
+        seedDemoListings(fresh.marketplace);
+      }
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);

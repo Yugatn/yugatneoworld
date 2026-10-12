@@ -14,7 +14,6 @@ import {
 import {
   createCurrencyState,
   ensureWallet,
-  credit,
   getBalance
 } from "../src/domain/currency.js";
 import { createDefaultWorld, WORLD_VERSION } from "../src/domain/world.js";
@@ -23,6 +22,7 @@ import { matchVoiceCommand } from "../src/domain/voice-commands.js";
 assert.ok(WORLD_VERSION >= 18);
 const world = createDefaultWorld();
 assert.ok(world.marketplace);
+assert.ok(world.marketplace.listings.length >= 1);
 assert.ok(CATEGORIES.length >= 5);
 
 const mp = createMarketplaceState();
@@ -88,6 +88,6 @@ assert.ok(summarizeMarketplace(demo).includes("active"));
 
 assert.equal(matchVoiceCommand("маркетплейс").id, "marketplace.open");
 assert.equal(matchVoiceCommand("продать товар").id, "marketplace.sell");
-assert.equal(matchVoiceCommand("объявления").id, "marketplace.open");
+assert.equal(matchVoiceCommand("авито").id, "marketplace.open");
 
 console.log("marketplace tests OK");

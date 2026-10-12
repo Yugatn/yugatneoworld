@@ -72,6 +72,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "identity.verify", label: "Identity verification", aliases: ["verify identity", "verification", "верификация", "подтвердить личность", "верифицировать"] },
   { id: "currency.balance", label: "Currency balance", aliases: ["balance", "my balance", "wallet", "баланс", "мой баланс", "кошелёк", "югатн коин"] },
   { id: "security.status", label: "Security", aliases: ["security", "security status", "privacy", "безопасность", "защита данных", "приватность"] },
+  { id: "marketplace.open", label: "Marketplace", aliases: ["marketplace", "classifieds", "avito", "маркетплейс", "авито", "барахолка", "купить с рук", "частные объявления"] },
+  { id: "marketplace.sell", label: "Sell on marketplace", aliases: ["sell item", "create listing", "продать товар", "подать объявление", "продать на авито", "новое объявление продажи"] },
+  { id: "marketplace.browse", label: "Browse marketplace", aliases: ["browse marketplace", "search listings", "найти товар", "поиск объявлений", "смотреть объявления"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
