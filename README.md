@@ -7,6 +7,16 @@ A social network designed as a navigable 2D world rather than a conventional pro
 Walk up to a **laptop** → private session → search the in-world knowledge index → tabs / new circuit / wipe on close.  
 Sessions are not persisted. Docs: [`docs/ANON_BROWSER_V0.1.md`](docs/ANON_BROWSER_V0.1.md).
 
+## Games and tournaments
+
+Open `/games/` for the game plaza. The current MVP includes a playable local
+two-player tic-tac-toe game and a local tournament-registration prototype. Tournament
+records are stored only in the current browser; they are not shared, ranked, or
+server-authoritative yet. Chess, checkers, Monopoly, Sudoku, and other logic games are
+listed as planned integrations, not advertised as playable online games.
+
+Roadmap and trust boundaries: [`docs/GAMES_AND_TOURNAMENTS_ROADMAP.md`](docs/GAMES_AND_TOURNAMENTS_ROADMAP.md).
+
 ## Payments
 
 YC escrow · crypto/P2P domain model · marketplace
