@@ -6,6 +6,9 @@ import { createOrderBook } from "./commerce.js";
 import { createScheduleState } from "./schedule.js";
 import { createClassesState } from "./classes.js";
 import { createSchoolModeState } from "./school-mode.js";
+import { createAccessState } from "./access-control.js";
+import { createEmbedsState } from "./embeds.js";
+import { createBulletinState } from "./bulletin-board.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -37,35 +40,32 @@ function ensureLife(data) {
   data.schedule = createScheduleState(data.schedule || {});
   data.classes = createClassesState(data.classes || {});
   data.schoolMode = createSchoolModeState(data.schoolMode || {});
+  data.access = createAccessState(data.access || {});
+  data.embeds = createEmbedsState(data.embeds || {});
+  data.bulletin = createBulletinState(data.bulletin || {});
   return data;
+}
+
+function fillDefaults(fresh) {
+  if (!fresh.inventory) fresh.inventory = createInventory();
+  if (!fresh.smartHome) fresh.smartHome = createSmartHome();
+  if (!fresh.avatarState) fresh.avatarState = createAvatarState();
+  if (!fresh.commerce) fresh.commerce = createOrderBook();
+  if (!fresh.schedule) fresh.schedule = createScheduleState();
+  if (!fresh.classes) fresh.classes = createClassesState();
+  if (!fresh.schoolMode) fresh.schoolMode = createSchoolModeState();
+  if (!fresh.access) fresh.access = createAccessState();
+  if (!fresh.embeds) fresh.embeds = createEmbedsState();
+  if (!fresh.bulletin) fresh.bulletin = createBulletinState();
+  return fresh;
 }
 
 export function loadWorld(fallback = createDefaultWorld()) {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) {
-      const fresh = structuredClone(fallback);
-      if (!fresh.inventory) fresh.inventory = createInventory();
-      if (!fresh.smartHome) fresh.smartHome = createSmartHome();
-      if (!fresh.avatarState) fresh.avatarState = createAvatarState();
-      if (!fresh.commerce) fresh.commerce = createOrderBook();
-      if (!fresh.schedule) fresh.schedule = createScheduleState();
-      if (!fresh.classes) fresh.classes = createClassesState();
-      if (!fresh.schoolMode) fresh.schoolMode = createSchoolModeState();
-      return fresh;
-    }
+    if (!raw) return fillDefaults(structuredClone(fallback));
     const data = JSON.parse(raw);
-    if (!isValidWorld(data)) {
-      const fresh = structuredClone(fallback);
-      if (!fresh.inventory) fresh.inventory = createInventory();
-      if (!fresh.smartHome) fresh.smartHome = createSmartHome();
-      if (!fresh.avatarState) fresh.avatarState = createAvatarState();
-      if (!fresh.commerce) fresh.commerce = createOrderBook();
-      if (!fresh.schedule) fresh.schedule = createScheduleState();
-      if (!fresh.classes) fresh.classes = createClassesState();
-      if (!fresh.schoolMode) fresh.schoolMode = createSchoolModeState();
-      return fresh;
-    }
+    if (!isValidWorld(data)) return fillDefaults(structuredClone(fallback));
     if (data.version !== WORLD_VERSION) {
       const fresh = structuredClone(fallback);
       fresh.avatar = {
@@ -91,25 +91,18 @@ export function loadWorld(fallback = createDefaultWorld()) {
       } else {
         fresh.inventory = data.inventory || createInventory();
       }
-      if (data.smartHome) {
-        fresh.smartHome = createSmartHome(data.smartHome);
-      }
+      if (data.smartHome) fresh.smartHome = createSmartHome(data.smartHome);
       if (data.avatarState) {
         fresh.avatarState = createAvatarState(data.avatarState);
         fresh.avatar.appearance = toLegacyAppearance(fresh.avatarState);
       }
-      if (data.commerce) {
-        fresh.commerce = createOrderBook(data.commerce);
-      }
-      if (data.schedule) {
-        fresh.schedule = createScheduleState(data.schedule);
-      }
-      if (data.classes) {
-        fresh.classes = createClassesState(data.classes);
-      }
-      if (data.schoolMode) {
-        fresh.schoolMode = createSchoolModeState(data.schoolMode);
-      }
+      if (data.commerce) fresh.commerce = createOrderBook(data.commerce);
+      if (data.schedule) fresh.schedule = createScheduleState(data.schedule);
+      if (data.classes) fresh.classes = createClassesState(data.classes);
+      if (data.schoolMode) fresh.schoolMode = createSchoolModeState(data.schoolMode);
+      if (data.access) fresh.access = createAccessState(data.access);
+      if (data.embeds) fresh.embeds = createEmbedsState(data.embeds);
+      if (data.bulletin) fresh.bulletin = createBulletinState(data.bulletin);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
@@ -121,15 +114,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
     ensureLife(data);
     return data;
   } catch {
-    const fresh = structuredClone(fallback);
-    if (!fresh.inventory) fresh.inventory = createInventory();
-    if (!fresh.smartHome) fresh.smartHome = createSmartHome();
-    if (!fresh.avatarState) fresh.avatarState = createAvatarState();
-    if (!fresh.commerce) fresh.commerce = createOrderBook();
-    if (!fresh.schedule) fresh.schedule = createScheduleState();
-    if (!fresh.classes) fresh.classes = createClassesState();
-    if (!fresh.schoolMode) fresh.schoolMode = createSchoolModeState();
-    return fresh;
+    return fillDefaults(structuredClone(fallback));
   }
 }
 
