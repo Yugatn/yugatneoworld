@@ -24,10 +24,11 @@ import {
 import { createDefaultWorld, WORLD_VERSION } from "../src/domain/world.js";
 import { matchVoiceCommand } from "../src/domain/voice-commands.js";
 
-assert.ok(WORLD_VERSION >= 9);
+assert.ok(WORLD_VERSION >= 10);
 const world = createDefaultWorld();
 assert.ok(world.schedule);
 assert.ok(world.classes);
+assert.ok(world.schoolMode);
 assert.ok(world.objects.some((o) => o.id === "kids-calendar"));
 assert.ok(world.objects.some((o) => o.id === "presentation-board"));
 

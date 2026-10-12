@@ -74,8 +74,32 @@ export function runVoiceCommand(id, api) {
     case "avatar.shave":
       api.doShave?.();
       break;
+    case "school.enter":
+      api.enterSchoolMode?.();
+      break;
+    case "school.exit":
+      api.exitSchoolMode?.();
+      break;
+    case "schedule.view":
+      api.openSchedule?.();
+      break;
+    case "schedule.due":
+      api.showDueReminders?.();
+      break;
+    case "class.list":
+      api.openClasses?.();
+      break;
+    case "class.create":
+      api.createClassPrompt?.();
+      break;
+    case "presentation.list":
+      api.openPresentations?.();
+      break;
+    case "presentation.host":
+      api.hostPresentation?.();
+      break;
     case "help":
-      api.show("\ud83c\udf99 Voice commands", listVoiceHelp().slice(0, 14).join(". ") + ".", [
+      api.show("\ud83c\udf99 Voice commands", listVoiceHelp().slice(0, 16).join(". ") + ".", [
         ["Close", () => api.closePanel?.()]
       ]);
       break;
