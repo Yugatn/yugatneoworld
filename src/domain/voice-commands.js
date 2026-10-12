@@ -32,6 +32,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "avatar.wardrobe", label: "Wardrobe", aliases: ["wardrobe", "clothes", "change clothes", "outfit", "шкаф", "одежда", "переодеться", "гардероб"] },
   { id: "avatar.appearance", label: "Appearance", aliases: ["appearance", "look", "my look", "внешность", "как я выгляжу", "внешний вид"] },
   { id: "avatar.shave", label: "Shave", aliases: ["shave", "shave me", "побрить", "побрей", "побриться", "бритьё"] },
+  { id: "avatar.shop", label: "Clothing shop", aliases: ["clothing shop", "avatar shop", "buy clothes", "магазин одежды", "магазин аватара", "купить одежду"] },
+  { id: "avatar.secondhand", label: "Second-hand", aliases: ["second hand", "secondhand", "resale", "секонд хенд", "секонд-хенд", "вторичный рынок", "перепродажа"] },
+  { id: "fashion.real", label: "Real fashion markets", aliases: ["real clothes", "fashion market", "buy real clothes", "настоящая одежда", "маркет одежды", "купить одежду себе"] },
   { id: "room.living", label: "Living room", aliases: ["living room", "lounge", "go to living room", "гостиная", "в гостиную", "зал"] },
   { id: "room.kids", label: "Kids room", aliases: ["kids room", "nursery", "children's room", "go to kids room", "детская", "в детскую", "комната детей"] },
   { id: "room.bathroom", label: "Bathroom", aliases: ["bathroom", "go to bathroom", "ванна", "ванная", "в ванную", "туалет"] },
@@ -56,6 +59,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "bulletin.view", label: "Bulletin board", aliases: ["bulletin board", "notice board", "announcements", "доска объявлений", "объявления", "доска"] },
   { id: "bulletin.post", label: "New announcement", aliases: ["new announcement", "post bulletin", "новое объявление", "написать объявление", "опубликовать объявление"] },
   { id: "embed.attach", label: "Attach media", aliases: ["attach video", "attach youtube", "attach document", "прикрепить видео", "прикрепить ютуб", "прикрепить документ", "вставить ссылку"] },
+  { id: "travel.air", label: "Air tickets", aliases: ["air tickets", "flight tickets", "buy flight", "авиабилеты", "билет на самолёт", "самолёт"] },
+  { id: "travel.rail", label: "Rail tickets", aliases: ["train tickets", "rail tickets", "buy train", "билеты на поезд", "жд билеты", "поезд"] },
+  { id: "cinema.invite", label: "Invite to cinema", aliases: ["invite to cinema", "invite friends to watch", "пригласить в кино", "пригласить друзей в кино", "смотреть кино вместе"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
