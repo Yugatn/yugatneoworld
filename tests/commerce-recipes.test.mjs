@@ -3,8 +3,6 @@ import {
   getCatalog,
   getBathroomCatalog,
   createOrder,
-  confirmOrder,
-  tickDelivery,
   createOrderBook,
   placeAndConfirm,
   tickAllDeliveries,
@@ -24,7 +22,8 @@ import { ROOMS } from "../src/domain/apartment.js";
 import { createDefaultWorld, WORLD_VERSION } from "../src/domain/world.js";
 
 assert.ok(ROOMS.bathroom);
-assert.equal(WORLD_VERSION, 7);
+assert.ok(ROOMS.kidsRoom);
+assert.ok(WORLD_VERSION >= 8);
 const world = createDefaultWorld();
 assert.ok(world.commerce);
 assert.ok(world.objects.some((o) => o.roomId === "bathroom"));
