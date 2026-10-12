@@ -1,6 +1,7 @@
 export const ROOM_CAPABILITIES = {
   kitchen: {
     title: "Kitchen",
+    titleRu: "Кухня",
     capabilities: [
       { id: "food.delivery", label: "Order food" },
       { id: "cafe.search", label: "Cafes" },
@@ -13,15 +14,18 @@ export const ROOM_CAPABILITIES = {
   },
   livingRoom: {
     title: "Living room",
+    titleRu: "Гостиная",
     capabilities: [
       { id: "video", label: "Watch video" },
       { id: "music", label: "Listen to music" },
       { id: "inventory", label: "Inventory / furniture" },
-      { id: "shop.browse", label: "Shop & delivery" }
+      { id: "shop.browse", label: "Shop & delivery" },
+      { id: "social.relax", label: "Relax / host guests" }
     ]
   },
   study: {
     title: "Study",
+    titleRu: "Кабинет",
     capabilities: [
       { id: "messenger", label: "Open Eugene Messenger" },
       { id: "social", label: "Open eWorld social" },
@@ -30,12 +34,14 @@ export const ROOM_CAPABILITIES = {
   },
   bedroom: {
     title: "Bedroom",
+    titleRu: "Спальня",
     capabilities: [
       { id: "avatar.edit", label: "Change appearance" }
     ]
   },
   bathroom: {
     title: "Bathroom",
+    titleRu: "Ванная",
     capabilities: [
       { id: "bathroom.use", label: "Use bathroom" },
       { id: "shop.bathroom", label: "Order bath products" },
@@ -43,8 +49,19 @@ export const ROOM_CAPABILITIES = {
       { id: "avatar.shave", label: "Shave" }
     ]
   },
+  kidsRoom: {
+    title: "Kids room",
+    titleRu: "Детская",
+    capabilities: [
+      { id: "kids.play", label: "Play" },
+      { id: "kids.stories", label: "Stories / books" },
+      { id: "education", label: "Learning toys" },
+      { id: "inventory", label: "Toys & furniture" }
+    ]
+  },
   workshop: {
     title: "Workshop",
+    titleRu: "Мастерская",
     capabilities: [
       { id: "furniture.edit", label: "Edit apartment" },
       { id: "inventory", label: "Open inventory" }
