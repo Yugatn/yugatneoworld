@@ -20,8 +20,9 @@ import {
 } from "../src/domain/smart-home.js";
 
 const sh = createSmartHome();
-assert.ok(LIGHT_ROOMS.length >= 5);
+assert.ok(LIGHT_ROOMS.length >= 6);
 assert.ok(LIGHT_ROOMS.includes("bathroom"));
+assert.ok(LIGHT_ROOMS.includes("kidsRoom"));
 assert.ok(isLightOn(sh, "livingRoom"));
 assert.equal(getBrightness(sh, "livingRoom"), 80);
 assert.ok(roomLightFactor(sh, "livingRoom") > 0.5);
@@ -72,5 +73,6 @@ assert.equal(seeded.media.tvOn, true);
 
 assert.equal(toggleLight(sh, "no-room"), null);
 assert.ok(isLightOn(sh, "bathroom"));
+assert.ok(isLightOn(sh, "kidsRoom"));
 
 console.log("smart-home tests OK");
