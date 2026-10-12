@@ -13,11 +13,12 @@
 9. **Transport** — HTTPS/HSTS and CSP defined as `SECURITY_HEADERS` (server must set).
 10. **Production checklist** — KMS, real crypto, WAF, no secrets in client.
 
-## OWASP mapping
+## OWASP
 
-Full **OWASP Top 10:2021 → eWorld** matrix (status, modules, prod gaps):
-
-→ **[`docs/OWASP_TOP10_MATRIX_V0.1.md`](./OWASP_TOP10_MATRIX_V0.1.md)**
+| Document | Purpose |
+|----------|---------|
+| **[`docs/OWASP_TOP10_EWORLD.md`](./OWASP_TOP10_EWORLD.md)** | Full project OWASP Top 10 standard (risks, controls, checklists) |
+| [`docs/OWASP_TOP10_MATRIX_V0.1.md`](./OWASP_TOP10_MATRIX_V0.1.md) | Compact status matrix |
 
 ## Module: `src/domain/security.js`
 

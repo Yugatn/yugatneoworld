@@ -1,6 +1,7 @@
 # OWASP Top 10:2021 → Yugatn eWorld matrix
 
 Reference: [OWASP Top 10:2021](https://owasp.org/Top10/2021/).  
+**Full standard (per-risk requirements):** [`docs/OWASP_TOP10_EWORLD.md`](./OWASP_TOP10_EWORLD.md)  
 Companion: `docs/SECURITY_ARCHITECTURE_V0.1.md`, module `src/domain/security.js`.
 
 **Status legend**
@@ -56,6 +57,7 @@ Companion: `docs/SECURITY_ARCHITECTURE_V0.1.md`, module `src/domain/security.js`
 
 ## Related standards
 
+- **Full eWorld OWASP standard** — `docs/OWASP_TOP10_EWORLD.md`
 - **ASVS 5.0** — verification requirements (target **L2** for identity, health, voting, currency).  
 - **Cheat Sheet Series** — Session, Access Control, XSS, CSP, WebSocket, Cryptographic Storage.  
 - Internal: `docs/SECURITY_ARCHITECTURE_V0.1.md`, `docs/CURRENCY_IDENTITY_VOTING_V0.1.md`.

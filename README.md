@@ -6,7 +6,8 @@ A social network designed as a navigable 2D world rather than a conventional pro
 
 - Domain security layer: sessions, audit, rate limits, redaction, CSP policy headers.
 - Identity: phone + passport/INN verification stores **hashes only**.
-- **OWASP Top 10:2021 matrix** → [`docs/OWASP_TOP10_MATRIX_V0.1.md`](docs/OWASP_TOP10_MATRIX_V0.1.md)
+- **OWASP Top 10 for eWorld** → [`docs/OWASP_TOP10_EWORLD.md`](docs/OWASP_TOP10_EWORLD.md)
+- Compact matrix → [`docs/OWASP_TOP10_MATRIX_V0.1.md`](docs/OWASP_TOP10_MATRIX_V0.1.md)
 - Architecture → [`docs/SECURITY_ARCHITECTURE_V0.1.md`](docs/SECURITY_ARCHITECTURE_V0.1.md)
 
 ## Avatar shop · NFT · second-hand
@@ -31,7 +32,7 @@ npm test
 
 ## Status
 
-v0.23.0 — security architecture, OWASP matrix, currency, identity, voting, health, wellness, podcasts.
+v0.23.0 — security architecture, OWASP Top 10 for eWorld, currency, identity, voting, health, wellness, podcasts.
 
 ## Author
 
