@@ -2,24 +2,25 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
+## Security
+
+- Domain security layer: sessions, audit, rate limits, redaction, CSP policy headers.
+- Identity: phone + passport/INN verification stores **hashes only**.
+- **OWASP Top 10:2021 matrix** → [`docs/OWASP_TOP10_MATRIX_V0.1.md`](docs/OWASP_TOP10_MATRIX_V0.1.md)
+- Architecture → [`docs/SECURITY_ARCHITECTURE_V0.1.md`](docs/SECURITY_ARCHITECTURE_V0.1.md)
+
 ## Avatar shop · NFT · second-hand
 
-- **Affordable** standard clothes (2–6 YC); optional **NFT** mint (~18–25 YC).
-- **Second-hand** resale of standard & NFT items.
-- **Real fashion markets** — partner deep-links for clothes for the user (not only the avatar).
+- **Affordable** standard clothes; optional NFT; second-hand; real fashion market links.
 - See `docs/SHOP_TRAVEL_CINEMA_V0.1.md`.
 
-## Travel
+## Travel · cinema · podcasts · wellness · health
 
-- Search & draft **air** and **rail** tickets (sample routes, modest fares).
+Air/rail drafts, cinema invites, podcast live, fitness/yoga (consent-gated avatar), health/illness, doctor booking.
 
-## Cinema with friends
+## School · access · bulletin · voting · currency
 
-- Buy a screening, **invite friends** to watch together (accept/decline).
-
-## School · access · bulletin
-
-Roles, ACL, YouTube/Google embeds, announcements — prior docs.
+Roles, ACL, embeds, announcements, official voting (full verification), Yugatn Coin (YC).
 
 ## Run
 
@@ -30,7 +31,7 @@ npm test
 
 ## Status
 
-v0.18.0 — avatar shop, NFT, second-hand, real markets, air/rail tickets, cinema invites.
+v0.23.0 — security architecture, OWASP matrix, currency, identity, voting, health, wellness, podcasts.
 
 ## Author
 
