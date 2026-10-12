@@ -22,6 +22,7 @@ import { createSecurityState } from "./security.js";
 import { createMarketplaceState, seedDemoListings } from "./marketplace.js";
 import { createPaymentsState } from "./payments.js";
 import { createCryptoP2PState } from "./crypto-p2p.js";
+import { createAnonBrowserState } from "./anon-browser.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -73,6 +74,10 @@ function ensureLife(data) {
   ensureMarketplace(data);
   data.payments = createPaymentsState(data.payments || {});
   data.cryptoP2p = createCryptoP2PState(data.cryptoP2p || {});
+  // Anonymous browser: never restore open sessions (privacy) — only empty shell + stats optional
+  data.anonBrowser = createAnonBrowserState({
+    stats: data.anonBrowser?.stats
+  });
   return data;
 }
 
@@ -106,6 +111,7 @@ function fillDefaults(fresh) {
   }
   if (!fresh.payments) fresh.payments = createPaymentsState();
   if (!fresh.cryptoP2p) fresh.cryptoP2p = createCryptoP2PState();
+  if (!fresh.anonBrowser) fresh.anonBrowser = createAnonBrowserState();
   return fresh;
 }
 
@@ -172,6 +178,8 @@ export function loadWorld(fallback = createDefaultWorld()) {
       }
       if (data.payments) fresh.payments = createPaymentsState(data.payments);
       if (data.cryptoP2p) fresh.cryptoP2p = createCryptoP2PState(data.cryptoP2p);
+      // do not restore browser sessions
+      fresh.anonBrowser = createAnonBrowserState({ stats: data.anonBrowser?.stats });
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
@@ -193,7 +201,15 @@ export function saveWorld(world) {
       world.avatar = world.avatar || {};
       world.avatar.appearance = toLegacyAppearance(world.avatarState);
     }
-    localStorage.setItem(KEY, JSON.stringify(world));
+    // Privacy: strip open anon-browser sessions before persist
+    const copy = { ...world };
+    if (copy.anonBrowser) {
+      copy.anonBrowser = {
+        sessions: {},
+        stats: { ...(copy.anonBrowser.stats || {}) }
+      };
+    }
+    localStorage.setItem(KEY, JSON.stringify(copy));
     return true;
   } catch {
     return false;
