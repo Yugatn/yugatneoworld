@@ -8,53 +8,30 @@ A social network designed as a navigable 2D world rather than a conventional pro
 - Stable `subjectId` stored in the browser; no server password or OAuth in v0.1.
 - Multiplayer display name follows the active session.
 
-## School mode (not a separate app)
+## School mode · Teacher role
 
-- Focused layer for **students, teachers, parents**: today's schedule, classes, homework, presentations.
-- Same `schedule` + `classes` data; enter/exit without leaving eWorld.
-- Deep link: `?mode=school` · voice: «режим школы» / «выйти из школы».
+- Focused layer for **students, teachers, parents** (not a separate app).
+- **Teacher**: view + **edit** schedule, assign lessons and homework, manage classes.
+- Student/parent: view schedule and homework only.
+- Deep link: `?mode=school` · `?role=teacher` · voice: «я учитель» / «режим школы».
 - See `docs/SCHOOL_MODE_V0.1.md` and `docs/LIFE_SIM_V0.1.md`.
 
 ## Home delivery (whole network)
 
 - Order **grocery, bathroom, household, cafe/restaurant** items with delivery into apartment **supplies**.
-- Shops: Local Market, Bath & Body, Home Essentials, cafes/restaurants.
-- Flow: draft → confirm → delivering → delivered (stock in pantry / bathroom cabinet).
-- Entry points: kitchen phone/fridge, bathroom cabinet, laptop `shop.browse`.
 - See `docs/COMMERCE_DELIVERY_V0.1.md`.
 
-## Bathroom
+## Bathroom · Kitchen recipes · Avatar · Smart Home
 
-- Full **bathroom** room: bath, shower, sink, cabinet, light.
-- Order shampoo, soap, towels, toothpaste… with home delivery.
-- Take a shower/bath (uses stock when available; temporary wet hair).
-
-## Kitchen recipes
-
-- **Recipe book** in the kitchen: everyday recipes (eggs, pasta, soup, chicken & rice…).
-- See missing ingredients vs pantry; **order only what is missing** with one delivery draft.
-
-## Avatar — appearance & care
-
-- Clothing wardrobe, temporary effects, shave at home, haircut at city barbershop.
-- See `docs/AVATAR_V0.1.md`.
-
-## Smart Home (digital 2D copy)
-
-- Lights per room (incl. bathroom), climate, TV, music.
-- See `docs/SMART_HOME_V0.1.md`.
+- Bathroom, recipes, wardrobe/shave, digital smart home — as in prior docs.
 
 ## Voice commands
 
-- **🎙** / **V**: door, rooms, shop, recipes, shower/bath, smart home, avatar, school mode, help (ru/en).
+- **🎙** / **V**: door, rooms, shop, school/teacher mode, schedule, help (ru/en).
 
-## Temporary keys · Visits · Cinema · Multiplayer
+## Temporary keys · Visits · Cinema · Multiplayer · Furniture
 
-- Keys, street visits, street cinema, friends, WebSocket rooms, mobile/PWA — as in prior versions.
-
-## Furniture
-
-- Place/pick furniture; sync in online rooms.
+- As in prior versions.
 
 ## Run locally
 
@@ -74,9 +51,9 @@ Controls: WASD / drag / joystick · **E** interact · **V** voice · **Esc** clo
 
 ## Status
 
-v0.15.0 — **school mode** (focused schedule/classes layer) + prior life-sim, bathroom, delivery, recipes, avatar, smart home.
+v0.16.0 — **teacher role** with schedule view/edit + assign lesson/homework; school mode v0.1.
 
-Still boundaries: real payments, courier NPC, full canvas UI body restore, server auth, LMS grades.
+Still boundaries: real payments, server teacher auth, grades LMS, full canvas UI restore.
 
 ## Author
 

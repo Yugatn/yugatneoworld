@@ -21,7 +21,6 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "emote.clap", label: "Clap", aliases: ["clap", "applaud", "хлопай", "аплодисменты"] },
   { id: "emote.think", label: "Think", aliases: ["think", "hmm", "подумай", "думаю"] },
   { id: "emote.hello", label: "Hello", aliases: ["hello", "hi", "hello chat", "приветствие"] },
-  // Smart home
   { id: "smarthome.panel", label: "Smart home", aliases: ["smart home", "smarthome", "умный дом", "умныйдом", "home control", "управление домом"] },
   { id: "lights.on", label: "Lights on", aliases: ["lights on", "turn on lights", "включи свет", "свет включить", "включи освещение", "turn the lights on"] },
   { id: "lights.off", label: "Lights off", aliases: ["lights off", "turn off lights", "выключи свет", "свет выключить", "выключи освещение", "turn the lights off"] },
@@ -30,11 +29,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "climate.cooler", label: "Cooler", aliases: ["cooler", "colder", "холоднее", "похолоднее", "уменьши температуру"] },
   { id: "tv.toggle", label: "Toggle TV", aliases: ["tv", "television", "toggle tv", "turn on tv", "turn off tv", "телевизор", "включи телевизор", "выключи телевизор"] },
   { id: "music.toggle", label: "Toggle music", aliases: ["music", "toggle music", "play music", "stop music", "музыка", "включи музыку", "выключи музыку"] },
-  // Avatar
   { id: "avatar.wardrobe", label: "Wardrobe", aliases: ["wardrobe", "clothes", "change clothes", "outfit", "шкаф", "одежда", "переодеться", "гардероб"] },
   { id: "avatar.appearance", label: "Appearance", aliases: ["appearance", "look", "my look", "внешность", "как я выгляжу", "внешний вид"] },
   { id: "avatar.shave", label: "Shave", aliases: ["shave", "shave me", "побрить", "побрей", "побриться", "бритьё"] },
-  // Rooms
   { id: "room.living", label: "Living room", aliases: ["living room", "lounge", "go to living room", "гостиная", "в гостиную", "зал"] },
   { id: "room.kids", label: "Kids room", aliases: ["kids room", "nursery", "children's room", "go to kids room", "детская", "в детскую", "комната детей"] },
   { id: "room.bathroom", label: "Bathroom", aliases: ["bathroom", "go to bathroom", "ванна", "ванная", "в ванную", "туалет"] },
@@ -46,15 +43,14 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "recipe.list", label: "Recipes", aliases: ["recipes", "recipe book", "cook", "рецепты", "книга рецептов", "что приготовить"] },
   { id: "bathroom.shower", label: "Shower", aliases: ["take a shower", "shower", "душ", "принять душ"] },
   { id: "bathroom.bath", label: "Bath", aliases: ["take a bath", "bath", "принять ванну", "лечь в ванну"] },
-  // Life sim — schedule / classes / presentations
   { id: "schedule.view", label: "Schedule", aliases: ["schedule", "calendar", "reminders", "расписание", "календарь", "напоминания", "уроки"] },
   { id: "schedule.due", label: "Due reminders", aliases: ["what is next", "due reminders", "что дальше", "ближайшие дела", "напоминание"] },
   { id: "class.list", label: "Classes", aliases: ["classes", "my classes", "классы", "мои классы", "уроки класс"] },
   { id: "class.create", label: "Create class", aliases: ["create class", "new class", "создать класс", "новый класс"] },
   { id: "presentation.list", label: "Presentations", aliases: ["presentations", "product pitch", "презентации", "презентация продукта"] },
   { id: "presentation.host", label: "Host presentation", aliases: ["host presentation", "start pitch", "провести презентацию", "презентация"] },
-  // School mode (focused layer, not a separate app)
   { id: "school.enter", label: "School mode", aliases: ["school mode", "enter school", "режим школы", "школьный режим", "школа", "режим школа", "в школу"] },
+  { id: "school.teacher", label: "Teacher role", aliases: ["teacher mode", "i am a teacher", "i'm a teacher", "я учитель", "роль учителя", "режим учителя", "войти как учитель"] },
   { id: "school.exit", label: "Exit school mode", aliases: ["exit school", "leave school", "выйти из школы", "домой из школы", "выйти из школьного режима", "закрыть школу"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
@@ -67,10 +63,6 @@ function normalize(text) {
     .trim();
 }
 
-/**
- * Match transcript to the best command.
- * @returns {{ id: string, label: string, score: number } | null}
- */
 export function matchVoiceCommand(transcript) {
   const t = normalize(transcript);
   if (!t || t.length < 2) return null;
@@ -103,7 +95,6 @@ export function listVoiceHelp() {
   return VOICE_COMMANDS.map((c) => c.label + ": " + c.aliases.slice(0, 3).join(" / "));
 }
 
-/** Feature detection helper (browser only). */
 export function speechRecognitionSupported() {
   if (typeof window === "undefined") return false;
   return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);

@@ -1,50 +1,47 @@
-# School mode v0.1
+# School mode v0.1 (+ teacher role)
 
 **Not a separate application.** School mode is a focused view inside the same Yugatn eWorld (same `world.schedule`, `world.classes`, same account).
 
-## Why
+## Roles & schedule access
 
-Parents, teachers and students need a calm entry: schedule, classes, homework, presentations — without leaving the social apartment world or installing a second product.
+| Role | schedule.view | schedule.edit / assign | class.create | homework.assign |
+|------|---------------|------------------------|--------------|-----------------|
+| student | yes | no | no | no |
+| parent | yes | no | no | no |
+| **teacher** | **yes** | **yes** | **yes** | **yes** |
+| admin | yes | yes | yes | yes |
+
+### Teacher API (`src/domain/school-mode.js`)
+
+- `enterAsTeacher(state, { teacherId, schoolName, … })`
+- `canAccessSchedule(state, { edit })`
+- `listTeacherSchedule(schedule, classes, schoolState)` — events for teacher's classes
+- `teacherAssignLesson(…)` — put a lesson on the shared calendar
+- `teacherAssignHomework(…)` — homework event
+- `teacherRemoveEvent(…)` — remove own (or any if admin)
+- `schoolDashboard` → `isTeacher`, `canEditSchedule`, capabilities filtered by role
+
+Deep links:
+
+- `?mode=school` — school mode
+- `?mode=teacher` or `?role=teacher` — school mode as teacher
+
+Voice: «я учитель» / «роль учителя» / teacher mode → `school.teacher`.
 
 ## State
 
-`world.schoolMode` (`src/domain/school-mode.js`):
+`world.schoolMode`:
 
 | Field | Meaning |
 |-------|---------|
 | `mode` | `home` \| `school` |
 | `role` | `student` \| `teacher` \| `parent` \| `admin` |
+| `teacherId` | optional subject id for filtering classes/events |
 | `school` | optional org `{ id, name, nameRu, gradeLabel }` |
 | `focusClassId` | optional class filter |
-| `enteredAt` | when school mode was entered |
-
-## API
-
-- `enterSchoolMode(state, { role, schoolName, schoolNameRu, gradeLabel })`
-- `exitSchoolMode(state)` → back to home mode
-- `schoolDashboard(schoolState, scheduleState, classesState, now)` — today events, due reminders, homework, classes, presentations, capabilities
-- `parseModeFromQuery("?mode=school")` — deep link / PWA shortcut
-
-Shared data still lives in:
-
-- `src/domain/schedule.js` — lessons, training, homework
-- `src/domain/classes.js` — classes, product presentations
-
-## Voice (ru/en)
-
-- режим школы / school mode → `school.enter`
-- выйти из школы / exit school / домой из школы → `school.exit`
-- Existing: расписание, создать класс, презентация
-
-## Entry points (product)
-
-1. Voice or menu **School mode**
-2. Kids room calendar / study board (same capabilities)
-3. URL `?mode=school` for a bookmarkable “school only” feel without a second app
 
 ## Not in v0.1
 
-- Separate store listing / native school app
-- Server-side school directory and SSO
-- Grades ledger, attendance, LMS file storage
+- Server-side verification of teacher credentials
+- Grades ledger / attendance
 - Multiplayer virtual classroom rooms

@@ -77,6 +77,9 @@ export function runVoiceCommand(id, api) {
     case "school.enter":
       api.enterSchoolMode?.();
       break;
+    case "school.teacher":
+      api.enterAsTeacher?.() ?? api.enterSchoolMode?.({ role: "teacher" });
+      break;
     case "school.exit":
       api.exitSchoolMode?.();
       break;
