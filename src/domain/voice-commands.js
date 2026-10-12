@@ -51,7 +51,11 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "presentation.host", label: "Host presentation", aliases: ["host presentation", "start pitch", "провести презентацию", "презентация"] },
   { id: "school.enter", label: "School mode", aliases: ["school mode", "enter school", "режим школы", "школьный режим", "школа", "режим школа", "в школу"] },
   { id: "school.teacher", label: "Teacher role", aliases: ["teacher mode", "i am a teacher", "i'm a teacher", "я учитель", "роль учителя", "режим учителя", "войти как учитель"] },
+  { id: "school.admin", label: "Admin role", aliases: ["admin mode", "i am admin", "i'm an administrator", "я администратор", "роль администратора", "режим администратора", "войти как администратор"] },
   { id: "school.exit", label: "Exit school mode", aliases: ["exit school", "leave school", "выйти из школы", "домой из школы", "выйти из школьного режима", "закрыть школу"] },
+  { id: "bulletin.view", label: "Bulletin board", aliases: ["bulletin board", "notice board", "announcements", "доска объявлений", "объявления", "доска"] },
+  { id: "bulletin.post", label: "New announcement", aliases: ["new announcement", "post bulletin", "новое объявление", "написать объявление", "опубликовать объявление"] },
+  { id: "embed.attach", label: "Attach media", aliases: ["attach video", "attach youtube", "attach document", "прикрепить видео", "прикрепить ютуб", "прикрепить документ", "вставить ссылку"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
