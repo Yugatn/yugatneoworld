@@ -37,11 +37,17 @@ assert.equal(matchVoiceCommand("внешность").id, "avatar.appearance");
 assert.equal(matchVoiceCommand("shave").id, "avatar.shave");
 assert.equal(matchVoiceCommand("побриться").id, "avatar.shave");
 
-// Bathroom / shop / recipes
+// Rooms / shop / recipes
 assert.equal(matchVoiceCommand("bathroom").id, "room.bathroom");
 assert.equal(matchVoiceCommand("ванная").id, "room.bathroom");
 assert.equal(matchVoiceCommand("kitchen").id, "room.kitchen");
 assert.equal(matchVoiceCommand("кухня").id, "room.kitchen");
+assert.equal(matchVoiceCommand("гостиная").id, "room.living");
+assert.equal(matchVoiceCommand("living room").id, "room.living");
+assert.equal(matchVoiceCommand("детская").id, "room.kids");
+assert.equal(matchVoiceCommand("kids room").id, "room.kids");
+assert.equal(matchVoiceCommand("спальня").id, "room.bedroom");
+assert.equal(matchVoiceCommand("кабинет").id, "room.study");
 assert.equal(matchVoiceCommand("доставка").id, "shop.open");
 assert.equal(matchVoiceCommand("шампунь").id, "shop.bathroom");
 assert.equal(matchVoiceCommand("рецепты").id, "recipe.list");
