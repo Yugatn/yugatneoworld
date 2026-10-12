@@ -20,7 +20,9 @@ export const ROOM_CAPABILITIES = {
       { id: "music", label: "Listen to music" },
       { id: "inventory", label: "Inventory / furniture" },
       { id: "shop.browse", label: "Shop & delivery" },
-      { id: "social.relax", label: "Relax / host guests" }
+      { id: "social.relax", label: "Relax / host guests" },
+      { id: "presentation.view", label: "Watch presentation" },
+      { id: "presentation.host", label: "Host product pitch" }
     ]
   },
   study: {
@@ -29,7 +31,10 @@ export const ROOM_CAPABILITIES = {
     capabilities: [
       { id: "messenger", label: "Open Eugene Messenger" },
       { id: "social", label: "Open eWorld social" },
-      { id: "shop.browse", label: "Shop & delivery" }
+      { id: "shop.browse", label: "Shop & delivery" },
+      { id: "class.manage", label: "Create / manage classes" },
+      { id: "presentation.host", label: "Product presentation" },
+      { id: "schedule.view", label: "Schedule" }
     ]
   },
   bedroom: {
@@ -56,7 +61,10 @@ export const ROOM_CAPABILITIES = {
       { id: "kids.play", label: "Play" },
       { id: "kids.stories", label: "Stories / books" },
       { id: "education", label: "Learning toys" },
-      { id: "inventory", label: "Toys & furniture" }
+      { id: "inventory", label: "Toys & furniture" },
+      { id: "schedule.view", label: "Lessons & training calendar" },
+      { id: "schedule.edit", label: "Add reminder" },
+      { id: "lesson.remind", label: "Due reminders" }
     ]
   },
   workshop: {
