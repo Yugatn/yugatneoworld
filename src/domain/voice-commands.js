@@ -46,6 +46,13 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "recipe.list", label: "Recipes", aliases: ["recipes", "recipe book", "cook", "рецепты", "книга рецептов", "что приготовить"] },
   { id: "bathroom.shower", label: "Shower", aliases: ["take a shower", "shower", "душ", "принять душ"] },
   { id: "bathroom.bath", label: "Bath", aliases: ["take a bath", "bath", "принять ванну", "лечь в ванну"] },
+  // Life sim — schedule / classes / presentations
+  { id: "schedule.view", label: "Schedule", aliases: ["schedule", "calendar", "reminders", "расписание", "календарь", "напоминания", "уроки"] },
+  { id: "schedule.due", label: "Due reminders", aliases: ["what is next", "due reminders", "что дальше", "ближайшие дела", "напоминание"] },
+  { id: "class.list", label: "Classes", aliases: ["classes", "my classes", "классы", "мои классы", "уроки класс"] },
+  { id: "class.create", label: "Create class", aliases: ["create class", "new class", "создать класс", "новый класс"] },
+  { id: "presentation.list", label: "Presentations", aliases: ["presentations", "product pitch", "презентации", "презентация продукта"] },
+  { id: "presentation.host", label: "Host presentation", aliases: ["host presentation", "start pitch", "провести презентацию", "презентация"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
