@@ -34,9 +34,13 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "avatar.wardrobe", label: "Wardrobe", aliases: ["wardrobe", "clothes", "change clothes", "outfit", "шкаф", "одежда", "переодеться", "гардероб"] },
   { id: "avatar.appearance", label: "Appearance", aliases: ["appearance", "look", "my look", "внешность", "как я выгляжу", "внешний вид"] },
   { id: "avatar.shave", label: "Shave", aliases: ["shave", "shave me", "побрить", "побрей", "побриться", "бритьё"] },
-  // Rooms / commerce
+  // Rooms
+  { id: "room.living", label: "Living room", aliases: ["living room", "lounge", "go to living room", "гостиная", "в гостиную", "зал"] },
+  { id: "room.kids", label: "Kids room", aliases: ["kids room", "nursery", "children's room", "go to kids room", "детская", "в детскую", "комната детей"] },
   { id: "room.bathroom", label: "Bathroom", aliases: ["bathroom", "go to bathroom", "ванна", "ванная", "в ванную", "туалет"] },
   { id: "room.kitchen", label: "Kitchen", aliases: ["kitchen", "go to kitchen", "кухня", "на кухню"] },
+  { id: "room.bedroom", label: "Bedroom", aliases: ["bedroom", "go to bedroom", "спальня", "в спальню"] },
+  { id: "room.study", label: "Study", aliases: ["study", "office", "go to study", "кабинет", "в кабинет"] },
   { id: "shop.open", label: "Shop delivery", aliases: ["shop", "order delivery", "delivery", "магазин", "доставка", "заказать", "заказ"] },
   { id: "shop.bathroom", label: "Bath products", aliases: ["order shampoo", "bath products", "shampoo", "шампунь", "мыло", "полотенце", "товары для ванны"] },
   { id: "recipe.list", label: "Recipes", aliases: ["recipes", "recipe book", "cook", "рецепты", "книга рецептов", "что приготовить"] },
