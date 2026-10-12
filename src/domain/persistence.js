@@ -20,6 +20,7 @@ import { createIdentityState } from "./identity-verify.js";
 import { createVotingState } from "./voting.js";
 import { createSecurityState } from "./security.js";
 import { createMarketplaceState, seedDemoListings } from "./marketplace.js";
+import { createPaymentsState } from "./payments.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -69,6 +70,7 @@ function ensureLife(data) {
   data.voting = createVotingState(data.voting || {});
   data.security = createSecurityState(data.security || {});
   ensureMarketplace(data);
+  data.payments = createPaymentsState(data.payments || {});
   return data;
 }
 
@@ -100,6 +102,7 @@ function fillDefaults(fresh) {
     fresh.marketplace = createMarketplaceState();
     seedDemoListings(fresh.marketplace);
   }
+  if (!fresh.payments) fresh.payments = createPaymentsState();
   return fresh;
 }
 
@@ -164,6 +167,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       } else {
         seedDemoListings(fresh.marketplace);
       }
+      if (data.payments) fresh.payments = createPaymentsState(data.payments);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);

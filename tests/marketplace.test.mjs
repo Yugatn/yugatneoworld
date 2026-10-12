@@ -11,6 +11,7 @@ import {
   CATEGORIES,
   summarizeMarketplace
 } from "../src/domain/marketplace.js";
+import { createPaymentsState } from "../src/domain/payments.js";
 import {
   createCurrencyState,
   ensureWallet,
@@ -19,14 +20,16 @@ import {
 import { createDefaultWorld, WORLD_VERSION } from "../src/domain/world.js";
 import { matchVoiceCommand } from "../src/domain/voice-commands.js";
 
-assert.ok(WORLD_VERSION >= 18);
+assert.ok(WORLD_VERSION >= 19);
 const world = createDefaultWorld();
 assert.ok(world.marketplace);
+assert.ok(world.payments);
 assert.ok(world.marketplace.listings.length >= 1);
 assert.ok(CATEGORIES.length >= 5);
 
 const mp = createMarketplaceState();
 const cur = createCurrencyState();
+const pay = createPaymentsState();
 ensureWallet(cur, "seller", { initial: 50 });
 ensureWallet(cur, "buyer", { initial: 80 });
 
@@ -47,13 +50,14 @@ const found = searchListings(mp, { query: "стол", category: "home" });
 assert.ok(found.length >= 1);
 
 assert.equal(
-  purchaseListing(mp, cur, { listingId: created.listing.id, buyerId: "seller" }).reason,
+  purchaseListing(mp, cur, pay, { listingId: created.listing.id, buyerId: "seller" }).reason,
   "own_listing"
 );
 
-const buy = purchaseListing(mp, cur, {
+const buy = purchaseListing(mp, cur, pay, {
   listingId: created.listing.id,
-  buyerId: "buyer"
+  buyerId: "buyer",
+  escrow: false
 });
 assert.equal(buy.ok, true);
 assert.equal(buy.listing.status, "sold");
@@ -68,7 +72,7 @@ const meet = createListing(mp, {
   category: "home"
 });
 assert.equal(
-  purchaseListing(mp, cur, { listingId: meet.listing.id, buyerId: "buyer" }).reason,
+  purchaseListing(mp, cur, pay, { listingId: meet.listing.id, buyerId: "buyer" }).reason,
   "meet_only"
 );
 reserveListing(mp, meet.listing.id, "buyer");
