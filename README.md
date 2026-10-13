@@ -2,13 +2,10 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
-## Messenger
+## Achievements & feed
 
-DM threads between friends (mailbox / laptop). Docs: [`docs/MESSENGER_V0.1.md`](docs/MESSENGER_V0.1.md)
-
-## Social · Games
-
-Friends & invites · chess/checkers tournaments
+Badges with YC rewards · public activity wall  
+[`docs/ACHIEVEMENTS_FEED_V0.1.md`](docs/ACHIEVEMENTS_FEED_V0.1.md)
 
 ## Run
 
@@ -19,7 +16,7 @@ npm test
 
 ## Status
 
-v0.32.0 — messenger, world v24.
+v0.33.0 — achievements + feed, world v25.
 
 ## Author
 
