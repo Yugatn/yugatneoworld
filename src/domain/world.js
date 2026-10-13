@@ -23,8 +23,9 @@ import { createMarketplaceState, seedDemoListings } from "./marketplace.js";
 import { createPaymentsState } from "./payments.js";
 import { createCryptoP2PState } from "./crypto-p2p.js";
 import { createAnonBrowserState } from "./anon-browser.js";
+import { createGamesState } from "./games.js";
 
-export const WORLD_VERSION = 21;
+export const WORLD_VERSION = 22;
 
 export function createDefaultWorld() {
   const avatarState = createAvatarState();
@@ -64,13 +65,15 @@ export function createDefaultWorld() {
     payments: createPaymentsState(),
     cryptoP2p: createCryptoP2PState(),
     anonBrowser: createAnonBrowserState(),
+    games: createGamesState(),
     objects: [
       { id:"mailbox",roomId:"livingRoom",type:"mailbox",name:"Mailbox",x:130,y:120,r:38,capabilities:["message.read","message.compose"] },
-      { id:"laptop",roomId:"livingRoom",type:"laptop",name:"Laptop",x:360,y:130,r:42,capabilities:["messenger","social","employment","shop.browse","class.manage","presentation.host","school.enter","embed.attach","travel.tickets","avatar.shop","podcast.play","podcast.live","wellness.doctor","wellness.consent","health.status","voting.open","identity.verify","currency.balance","security.status","marketplace.open","marketplace.sell","payments.orders","crypto.p2p","crypto.pay","browser.anonymous","browser.open","browser.search"] },
+      { id:"laptop",roomId:"livingRoom",type:"laptop",name:"Laptop",x:360,y:130,r:42,capabilities:["messenger","social","employment","shop.browse","class.manage","presentation.host","school.enter","embed.attach","travel.tickets","avatar.shop","podcast.play","podcast.live","wellness.doctor","wellness.consent","health.status","voting.open","identity.verify","currency.balance","security.status","marketplace.open","marketplace.sell","payments.orders","crypto.p2p","crypto.pay","browser.anonymous","browser.open","browser.search","games.play","games.tournament"] },
       { id:"tv",roomId:"livingRoom",type:"tv",name:"Television",x:620,y:125,r:45,capabilities:["video","smarthome.tv","presentation.view","embed.view","cinema.invite","wellness.yoga_stream"] },
       { id:"player",roomId:"livingRoom",type:"player",name:"Music Player",x:820,y:130,r:42,capabilities:["music","smarthome.music","podcast.play","podcast.live"] },
       { id:"sofa",roomId:"livingRoom",type:"sofa",name:"Sofa",x:480,y:320,r:50,capabilities:["social.relax","video","cinema.watch","podcast.play","health.rest"] },
       { id:"bulletin-board",roomId:"livingRoom",type:"board",name:"Bulletin board",x:200,y:250,r:44,capabilities:["bulletin.view","bulletin.post","embed.view","voting.open"] },
+      { id:"game-table",roomId:"livingRoom",type:"table",name:"Games table",x:400,y:280,r:48,capabilities:["games.play","games.tournament","games.chess","games.checkers","games.monopoly"] },
       { id:"thermostat",roomId:"livingRoom",type:"thermostat",name:"Thermostat",x:250,y:380,r:36,capabilities:["smarthome.climate"] },
       { id:"light-switch",roomId:"livingRoom",type:"switch",name:"Light switch",x:90,y:280,r:34,capabilities:["smarthome.lights"] },
       { id:"kitchen",roomId:"livingRoom",type:"door",name:"Kitchen",x:930,y:500,r:42,targetRoom:"kitchen",capabilities:["room.enter"] },
@@ -87,7 +90,7 @@ export function createDefaultWorld() {
       { id:"pantry",roomId:"kitchen",type:"pantry",name:"Pantry",x:850,y:150,r:42,capabilities:["grocery.search","supplies.view"] },
       { id:"recipe-book",roomId:"kitchen",type:"book",name:"Recipe book",x:520,y:280,r:40,capabilities:["recipe.list","recipe.order"] },
       { id:"kitchen-switch",roomId:"kitchen",type:"switch",name:"Kitchen light",x:100,y:280,r:34,capabilities:["smarthome.lights"] },
-      { id:"study-laptop",roomId:"study",type:"laptop",name:"Work Laptop",x:350,y:160,r:42,capabilities:["messenger","social","employment","shop.browse","class.manage","presentation.host","school.enter","embed.attach","travel.tickets","podcast.play","podcast.live","wellness.doctor","health.status","voting.open","identity.verify","currency.balance","security.status","marketplace.open","marketplace.sell","payments.orders","crypto.p2p","crypto.pay","browser.anonymous","browser.open","browser.search"] },
+      { id:"study-laptop",roomId:"study",type:"laptop",name:"Work Laptop",x:350,y:160,r:42,capabilities:["messenger","social","employment","shop.browse","class.manage","presentation.host","school.enter","embed.attach","travel.tickets","podcast.play","podcast.live","wellness.doctor","health.status","voting.open","identity.verify","currency.balance","security.status","marketplace.open","marketplace.sell","payments.orders","crypto.p2p","crypto.pay","browser.anonymous","browser.open","browser.search","games.play","games.tournament"] },
       { id:"study-books",roomId:"study",type:"books",name:"Bookshelf",x:720,y:160,r:42,capabilities:["books","education"] },
       { id:"presentation-board",roomId:"study",type:"board",name:"Presentation board",x:500,y:300,r:44,capabilities:["presentation.host","presentation.view","class.manage","school.enter","embed.view","embed.attach"] },
       { id:"study-bulletin",roomId:"study",type:"board",name:"School bulletin",x:200,y:300,r:42,capabilities:["bulletin.view","bulletin.post","embed.view","voting.open"] },
@@ -104,7 +107,7 @@ export function createDefaultWorld() {
       { id:"toilet",roomId:"bathroom",type:"toilet",name:"Toilet",x:320,y:380,r:36,capabilities:["bathroom.use"] },
       { id:"bathroom-switch",roomId:"bathroom",type:"switch",name:"Bathroom light",x:100,y:280,r:34,capabilities:["smarthome.lights"] },
       { id:"kids-bed",roomId:"kidsRoom",type:"bed",name:"Kids bed",x:200,y:180,r:48,capabilities:["kids.rest"] },
-      { id:"toy-box",roomId:"kidsRoom",type:"toys",name:"Toy box",x:450,y:160,r:42,capabilities:["kids.play","inventory"] },
+      { id:"toy-box",roomId:"kidsRoom",type:"toys",name:"Toy box",x:450,y:160,r:42,capabilities:["kids.play","inventory","games.play"] },
       { id:"kids-desk",roomId:"kidsRoom",type:"desk",name:"Study desk",x:720,y:160,r:42,capabilities:["education","kids.stories","schedule.view","school.enter"] },
       { id:"kids-shelf",roomId:"kidsRoom",type:"books",name:"Kids bookshelf",x:850,y:300,r:40,capabilities:["kids.stories","education"] },
       { id:"kids-calendar",roomId:"kidsRoom",type:"calendar",name:"Kids calendar",x:300,y:320,r:40,capabilities:["schedule.view","schedule.edit","lesson.remind","school.enter"] },
