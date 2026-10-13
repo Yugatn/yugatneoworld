@@ -2,14 +2,14 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
-## Games & tournaments
+## Social
 
-Chess · checkers · monopoly · tic-tac-toe · reversi — matches, Elo ratings, single-elim cups with YC prizes.  
-Docs: [`docs/GAMES_V0.1.md`](docs/GAMES_V0.1.md)
+Friends · presence · invites (games / cinema / …) · in-world notifications  
+Docs: [`docs/SOCIAL_V0.1.md`](docs/SOCIAL_V0.1.md)
 
-## Other highlights
+## Games
 
-Anonymous browser · marketplace · payments/escrow · crypto P2P model · school mode · wellness/health
+Chess · checkers · monopoly · tournaments — [`docs/GAMES_V0.1.md`](docs/GAMES_V0.1.md)
 
 ## Run
 
@@ -20,7 +20,7 @@ npm test
 
 ## Status
 
-v0.30.0 — games & tournaments, world v22.
+v0.31.0 — social graph + notifications, world v23.
 
 ## Author
 
