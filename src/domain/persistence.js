@@ -26,6 +26,7 @@ import { createAnonBrowserState } from "./anon-browser.js";
 import { createGamesState } from "./games.js";
 import { createSocialState } from "./social.js";
 import { createNotificationsState } from "./notifications.js";
+import { createMessengerState } from "./messenger.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -77,12 +78,11 @@ function ensureLife(data) {
   ensureMarketplace(data);
   data.payments = createPaymentsState(data.payments || {});
   data.cryptoP2p = createCryptoP2PState(data.cryptoP2p || {});
-  data.anonBrowser = createAnonBrowserState({
-    stats: data.anonBrowser?.stats
-  });
+  data.anonBrowser = createAnonBrowserState({ stats: data.anonBrowser?.stats });
   data.games = createGamesState(data.games || {});
   data.social = createSocialState(data.social || {});
   data.notifications = createNotificationsState(data.notifications || {});
+  data.messenger = createMessengerState(data.messenger || {});
   return data;
 }
 
@@ -120,6 +120,7 @@ function fillDefaults(fresh) {
   if (!fresh.games) fresh.games = createGamesState();
   if (!fresh.social) fresh.social = createSocialState();
   if (!fresh.notifications) fresh.notifications = createNotificationsState();
+  if (!fresh.messenger) fresh.messenger = createMessengerState();
   return fresh;
 }
 
@@ -190,6 +191,7 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.games) fresh.games = createGamesState(data.games);
       if (data.social) fresh.social = createSocialState(data.social);
       if (data.notifications) fresh.notifications = createNotificationsState(data.notifications);
+      if (data.messenger) fresh.messenger = createMessengerState(data.messenger);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
