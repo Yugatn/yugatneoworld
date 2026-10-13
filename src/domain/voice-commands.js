@@ -84,6 +84,11 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "browser.search", label: "Private search", aliases: ["private search", "search the web", "приватный поиск", "поиск в браузере", "найти в браузере", "искать"] },
   { id: "browser.newcircuit", label: "New circuit", aliases: ["new circuit", "new identity", "новая цепочка", "новая личность", "сменить цепочку", "очистить следы"] },
   { id: "browser.close", label: "Close browser", aliases: ["close browser", "закрыть браузер", "выйти из браузера"] },
+  { id: "games.play", label: "Games", aliases: ["games", "play games", "board games", "игры", "играть", "настольные игры", "игровой стол"] },
+  { id: "games.chess", label: "Chess", aliases: ["chess", "play chess", "шахматы", "сыграть в шахматы", "партию шахмат"] },
+  { id: "games.checkers", label: "Checkers", aliases: ["checkers", "draughts", "шашки", "сыграть в шашки"] },
+  { id: "games.monopoly", label: "Monopoly", aliases: ["monopoly", "монополия", "сыграть в монополию"] },
+  { id: "games.tournament", label: "Tournament", aliases: ["tournament", "cup", "турнир", "создать турнир", "шахматный турнир", "соревнование"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 

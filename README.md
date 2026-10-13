@@ -2,18 +2,14 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
-## Anonymous browser
+## Games & tournaments
 
-Walk up to a **laptop** → private session → search the in-world knowledge index → tabs / new circuit / wipe on close.  
-Sessions are not persisted. Docs: [`docs/ANON_BROWSER_V0.1.md`](docs/ANON_BROWSER_V0.1.md).
+Chess · checkers · monopoly · tic-tac-toe · reversi — matches, Elo ratings, single-elim cups with YC prizes.  
+Docs: [`docs/GAMES_V0.1.md`](docs/GAMES_V0.1.md)
 
-## Payments
+## Other highlights
 
-YC escrow · crypto/P2P domain model · marketplace
-
-## Security
-
-[`docs/OWASP_TOP10_EWORLD.md`](docs/OWASP_TOP10_EWORLD.md)
+Anonymous browser · marketplace · payments/escrow · crypto P2P model · school mode · wellness/health
 
 ## Run
 
@@ -24,7 +20,7 @@ npm test
 
 ## Status
 
-v0.29.0 — anonymous browser at computers, world v21.
+v0.30.0 — games & tournaments, world v22.
 
 ## Author
 
