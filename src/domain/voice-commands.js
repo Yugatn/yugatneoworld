@@ -95,6 +95,9 @@ export const VOICE_COMMANDS = /** @type {VoiceCommandDef[]} */ ([
   { id: "notify.list", label: "Notifications", aliases: ["notifications", "alerts", "уведомления", "оповещения", "колокольчик"] },
   { id: "messenger.list", label: "Messages", aliases: ["messages", "inbox", "сообщения", "мессенджер", "личные сообщения", "входящие"] },
   { id: "messenger.send", label: "Send message", aliases: ["send message", "write message", "написать сообщение", "отправить сообщение", "написать другу"] },
+  { id: "achievements.list", label: "Achievements", aliases: ["achievements", "badges", "trophies", "достижения", "значки", "трофеи", "награды"] },
+  { id: "feed.list", label: "Activity feed", aliases: ["feed", "activity feed", "wall", "лента", "стена", "лента активности"] },
+  { id: "feed.post", label: "New post", aliases: ["new post", "write post", "новый пост", "написать пост", "опубликовать"] },
   { id: "help", label: "Help", aliases: ["help", "commands", "помощь", "команды", "что умеешь"] }
 ]);
 
