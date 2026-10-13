@@ -1,12 +1,12 @@
 {
   "name": "yugatn-eworld",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node tests/domain.test.mjs && node tests/identity.test.mjs && node tests/social-cinema.test.mjs && node tests/keys.test.mjs && node tests/voice-commands.test.mjs && node tests/smart-home.test.mjs && node tests/avatar.test.mjs && node tests/commerce-recipes.test.mjs && node tests/rooms.test.mjs && node tests/schedule-classes.test.mjs && node tests/school-mode.test.mjs && node tests/access-embeds-bulletin.test.mjs && node tests/shop-travel-cinema.test.mjs && node tests/podcasts.test.mjs && node tests/wellness.test.mjs && node tests/health.test.mjs && node tests/currency-identity-voting.test.mjs && node tests/security.test.mjs && node tests/marketplace.test.mjs && node tests/payments-marketplace.test.mjs && node tests/crypto-p2p.test.mjs && node tests/anon-browser.test.mjs && node tests/games.test.mjs && node tests/social-notifications.test.mjs && node tests/realtime-protocol.test.mjs && node tests/ws-smoke.test.mjs",
+    "test": "node tests/domain.test.mjs && node tests/identity.test.mjs && node tests/social-cinema.test.mjs && node tests/keys.test.mjs && node tests/voice-commands.test.mjs && node tests/smart-home.test.mjs && node tests/avatar.test.mjs && node tests/commerce-recipes.test.mjs && node tests/rooms.test.mjs && node tests/schedule-classes.test.mjs && node tests/school-mode.test.mjs && node tests/access-embeds-bulletin.test.mjs && node tests/shop-travel-cinema.test.mjs && node tests/podcasts.test.mjs && node tests/wellness.test.mjs && node tests/health.test.mjs && node tests/currency-identity-voting.test.mjs && node tests/security.test.mjs && node tests/marketplace.test.mjs && node tests/payments-marketplace.test.mjs && node tests/crypto-p2p.test.mjs && node tests/anon-browser.test.mjs && node tests/games.test.mjs && node tests/social-notifications.test.mjs && node tests/messenger.test.mjs && node tests/realtime-protocol.test.mjs && node tests/ws-smoke.test.mjs",
     "check": "node --check server/index.js && node --check src/boot.js && node --check src/main.js && npm test"
   },
   "dependencies": {

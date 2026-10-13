@@ -2,14 +2,13 @@
 
 A social network designed as a navigable 2D world rather than a conventional profile-and-menu application.
 
-## Social
+## Messenger
 
-Friends · presence · invites (games / cinema / …) · in-world notifications  
-Docs: [`docs/SOCIAL_V0.1.md`](docs/SOCIAL_V0.1.md)
+DM threads between friends (mailbox / laptop). Docs: [`docs/MESSENGER_V0.1.md`](docs/MESSENGER_V0.1.md)
 
-## Games
+## Social · Games
 
-Chess · checkers · monopoly · tournaments — [`docs/GAMES_V0.1.md`](docs/GAMES_V0.1.md)
+Friends & invites · chess/checkers tournaments
 
 ## Run
 
@@ -20,7 +19,7 @@ npm test
 
 ## Status
 
-v0.31.0 — social graph + notifications, world v23.
+v0.32.0 — messenger, world v24.
 
 ## Author
 
