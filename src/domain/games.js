@@ -2,10 +2,13 @@
  * Built-in logic games + tournaments for eWorld.
  * Chess / checkers / monopoly (simplified domain models) + tic-tac-toe / reversi.
  * Full FIDE engines are out of scope — moves are recorded with light validation.
+ * Achievements: pass ctx = { achievements, notifications, currency } to playMove /
+ * joinTournament / startTournament.
  */
 
 import { sanitizeText } from "./security.js";
 import { credit, ensureWallet } from "./currency.js";
+import { recordGameEvent } from "./achievements.js";
 
 export const GAME_IDS = Object.freeze([
   "chess",
@@ -97,9 +100,48 @@ function catalogEntry(id) {
   return GAME_CATALOG.find((g) => g.id === id) || null;
 }
 
+function achHooks(ctx) {
+  if (!ctx?.achievements) return null;
+  return {
+    notifyState: ctx.notifications || null,
+    currencyState: ctx.currency || null
+  };
+}
+
+/** Emit achievement progress for all players of a finished match. */
+function emitMatchAchievements(match, winnerId, result, ctx) {
+  if (!ctx?.achievements) return [];
+  const hooks = achHooks(ctx);
+  const all = [];
+  const gameId = match.gameId;
+  const rated = Boolean(match.rated);
+
+  for (const p of match.players) {
+    let res = "play";
+    if (result === "draw" || winnerId == null) res = "draw";
+    else if (p === winnerId) res = "win";
+    else res = "loss";
+
+    const r = recordGameEvent(
+      ctx.achievements,
+      p,
+      { gameId, result: res, rated: rated && res === "win" },
+      hooks || {}
+    );
+    if (r.unlocked?.length) all.push(...r.unlocked.map((id) => ({ userId: p, id })));
+  }
+  return all;
+}
+
 export function createGamesState(seed = {}) {
   return {
-    matches: Array.isArray(seed.matches) ? seed.matches.map((m) => ({ ...m, moves: [...(m.moves || [])], players: [...(m.players || [])] })) : [],
+    matches: Array.isArray(seed.matches)
+      ? seed.matches.map((m) => ({
+          ...m,
+          moves: [...(m.moves || [])],
+          players: [...(m.players || [])]
+        }))
+      : [],
     tournaments: Array.isArray(seed.tournaments)
       ? seed.tournaments.map((t) => ({
           ...t,
@@ -107,7 +149,6 @@ export function createGamesState(seed = {}) {
           bracket: Array.isArray(t.bracket) ? t.bracket.map((b) => ({ ...b })) : []
         }))
       : [],
-    /** userId → { chess, checkers, ... } ratings */
     ratings: seed.ratings && typeof seed.ratings === "object" ? { ...seed.ratings } : {}
   };
 }
@@ -188,7 +229,10 @@ export function createMatch(state, {
     maxPlayers: cat.maxPlayers
   };
   state.matches.push(match);
-  return { ok: true, match: { ...match, moves: [...match.moves], players: [...match.players] } };
+  return {
+    ok: true,
+    match: { ...match, moves: [...match.moves], players: [...match.players] }
+  };
 }
 
 export function joinMatch(state, matchId, userId) {
@@ -221,12 +265,18 @@ function snapshotMatch(match) {
     ...match,
     players: [...match.players],
     moves: match.moves.map((m) => ({ ...m })),
-    board: match.board && typeof match.board === "object" ? JSON.parse(JSON.stringify(match.board)) : match.board
+    board:
+      match.board && typeof match.board === "object"
+        ? JSON.parse(JSON.stringify(match.board))
+        : match.board
   };
 }
 
-/** Record a move. Light validation by game type. */
-export function playMove(state, matchId, userId, move) {
+/**
+ * Record a move.
+ * @param {object} [ctx] - { achievements, notifications, currency }
+ */
+export function playMove(state, matchId, userId, move, ctx = {}) {
   const match = state.matches.find((m) => m.id === matchId);
   if (!match) return { ok: false, reason: "not_found" };
   if (match.status !== "active") return { ok: false, reason: "not_active" };
@@ -238,6 +288,8 @@ export function playMove(state, matchId, userId, move) {
     { maxLen: 80 }
   ).trim();
   if (!notation) return { ok: false, reason: "empty_move" };
+
+  let achievementsUnlocked = [];
 
   if (match.gameId === "tictactoe") {
     const cell = Number(typeof move === "object" ? move.cell : notation);
@@ -254,36 +306,51 @@ export function playMove(state, matchId, userId, move) {
     match.moves.push({ at: Date.now(), by: uid_, notation: `${mark}@${cell}` });
     const win = tictactoeWinner(match.board.cells);
     if (win) {
-      finishMatch(state, match, uid_, "win");
+      achievementsUnlocked = finishMatch(state, match, uid_, "win", ctx);
     } else if (match.board.cells.every((c) => c != null)) {
-      finishMatch(state, match, null, "draw");
+      achievementsUnlocked = finishMatch(state, match, null, "draw", ctx);
     }
     match.updatedAt = Date.now();
-    return { ok: true, match: snapshotMatch(match) };
+    return {
+      ok: true,
+      match: snapshotMatch(match),
+      achievementsUnlocked
+    };
   }
 
-  // chess / checkers / reversi / monopoly — append notation
   match.moves.push({ at: Date.now(), by: uid_, notation });
   if (match.board.ply != null) match.board.ply += 1;
 
   if (match.gameId === "monopoly" && typeof move === "object" && move.dice) {
-    const dice = Math.min(12, Math.max(2, Number(move.dice) || 2 + Math.floor(Math.random() * 11)));
+    const dice = Math.min(
+      12,
+      Math.max(2, Number(move.dice) || 2 + Math.floor(Math.random() * 11))
+    );
     const pos = (match.board.positions[uid_] || 0) + dice;
     match.board.positions[uid_] = pos % 40;
     match.board.turnIndex = (match.board.turnIndex + 1) % match.players.length;
   }
 
-  // Explicit resign / claim win helpers
   if (/^resign$/i.test(notation)) {
     const other = match.players.find((p) => p !== uid_) || null;
-    finishMatch(state, match, other, other ? "resign" : "abort");
+    achievementsUnlocked = finishMatch(
+      state,
+      match,
+      other,
+      other ? "resign" : "abort",
+      ctx
+    );
   }
   if (/^claim[_-]?win$/i.test(notation) && match.players.length === 2) {
-    finishMatch(state, match, uid_, "claim");
+    achievementsUnlocked = finishMatch(state, match, uid_, "claim", ctx);
   }
 
   match.updatedAt = Date.now();
-  return { ok: true, match: snapshotMatch(match) };
+  return {
+    ok: true,
+    match: snapshotMatch(match),
+    achievementsUnlocked
+  };
 }
 
 function tictactoeWinner(cells) {
@@ -303,7 +370,8 @@ function tictactoeWinner(cells) {
   return null;
 }
 
-function finishMatch(state, match, winnerId, result) {
+function finishMatch(state, match, winnerId, result, ctx = {}) {
+  if (match.status === "finished") return [];
   match.status = "finished";
   match.winnerId = winnerId;
   match.result = result;
@@ -312,16 +380,21 @@ function finishMatch(state, match, winnerId, result) {
     const loser = match.players.find((p) => p !== winnerId);
     if (loser) adjustRating(state, winnerId, loser, match.gameId);
   }
+  const unlocked = emitMatchAchievements(match, winnerId, result, ctx);
   if (match.tournamentId) {
-    advanceTournament(state, match.tournamentId, match);
+    advanceTournament(state, match.tournamentId, match, ctx);
   }
+  return unlocked;
 }
 
 export function abortMatch(state, matchId, actorId) {
   const match = state.matches.find((m) => m.id === matchId);
   if (!match) return { ok: false, reason: "not_found" };
   if (match.status === "finished") return { ok: false, reason: "already_finished" };
-  if (match.hostId !== String(actorId) && !match.players.includes(String(actorId))) {
+  if (
+    match.hostId !== String(actorId) &&
+    !match.players.includes(String(actorId))
+  ) {
     return { ok: false, reason: "not_allowed" };
   }
   match.status = "aborted";
@@ -342,7 +415,7 @@ export function getMatch(state, matchId) {
   return m ? snapshotMatch(m) : null;
 }
 
-// —— Tournaments (single-elimination) ——
+// —— Tournaments ——
 
 export function createTournament(state, {
   gameId,
@@ -353,7 +426,6 @@ export function createTournament(state, {
 } = {}) {
   if (!gameOk(gameId)) return { ok: false, reason: "unknown_game" };
   const n = Math.min(32, Math.max(2, Number(maxEntrants) || 8));
-  // power of 2 preferred
   let size = 2;
   while (size < n) size *= 2;
   if (size > 32) size = 32;
@@ -376,7 +448,7 @@ export function createTournament(state, {
   return { ok: true, tournament: { ...t, entrants: [], bracket: [] } };
 }
 
-export function joinTournament(state, tournamentId, userId) {
+export function joinTournament(state, tournamentId, userId, ctx = {}) {
   const t = state.tournaments.find((x) => x.id === tournamentId);
   if (!t) return { ok: false, reason: "not_found" };
   if (t.status !== "open") return { ok: false, reason: "not_open" };
@@ -386,7 +458,23 @@ export function joinTournament(state, tournamentId, userId) {
   t.entrants.push(uid_);
   ensureRating(state, uid_, t.gameId);
   t.updatedAt = Date.now();
-  return { ok: true, tournament: snapshotTournament(t) };
+
+  let achievementsUnlocked = [];
+  if (ctx.achievements) {
+    const r = recordGameEvent(
+      ctx.achievements,
+      uid_,
+      { tournamentJoin: true },
+      achHooks(ctx) || {}
+    );
+    achievementsUnlocked = r.unlocked || [];
+  }
+
+  return {
+    ok: true,
+    tournament: snapshotTournament(t),
+    achievementsUnlocked
+  };
 }
 
 function snapshotTournament(t) {
@@ -397,16 +485,15 @@ function snapshotTournament(t) {
   };
 }
 
-export function startTournament(state, tournamentId, hostId) {
+export function startTournament(state, tournamentId, hostId, ctx = {}) {
   const t = state.tournaments.find((x) => x.id === tournamentId);
   if (!t) return { ok: false, reason: "not_found" };
   if (t.hostId !== String(hostId)) return { ok: false, reason: "not_host" };
   if (t.status !== "open") return { ok: false, reason: "not_open" };
   if (t.entrants.length < 2) return { ok: false, reason: "need_2_players" };
 
-  // pad with byes to power of 2
   const players = [...t.entrants];
-  while (players.length & (players.length - 1)) players.push(null); // bye slots
+  while (players.length & (players.length - 1)) players.push(null);
 
   t.bracket = [];
   for (let i = 0; i < players.length; i += 2) {
@@ -453,21 +540,36 @@ export function startTournament(state, tournamentId, hostId) {
   }
   t.status = "running";
   t.updatedAt = Date.now();
-  // auto-advance pure byes
-  tryAdvanceRounds(state, t);
-  return { ok: true, tournament: snapshotTournament(t) };
+
+  let achievementsUnlocked = [];
+  if (ctx.achievements) {
+    const r = recordGameEvent(
+      ctx.achievements,
+      hostId,
+      { tournamentHost: true },
+      achHooks(ctx) || {}
+    );
+    achievementsUnlocked = r.unlocked || [];
+  }
+
+  tryAdvanceRounds(state, t, ctx);
+  return {
+    ok: true,
+    tournament: snapshotTournament(t),
+    achievementsUnlocked
+  };
 }
 
-function advanceTournament(state, tournamentId, finishedMatch) {
+function advanceTournament(state, tournamentId, finishedMatch, ctx = {}) {
   const t = state.tournaments.find((x) => x.id === tournamentId);
   if (!t || t.status !== "running") return;
   const node = t.bracket.find((b) => b.matchId === finishedMatch.id);
   if (!node) return;
   node.winnerId = finishedMatch.winnerId;
-  tryAdvanceRounds(state, t);
+  tryAdvanceRounds(state, t, ctx);
 }
 
-function tryAdvanceRounds(state, t) {
+function tryAdvanceRounds(state, t, ctx = {}) {
   const rounds = [...new Set(t.bracket.map((b) => b.round))].sort((a, b) => a - b);
   const maxRound = Math.max(...rounds);
   const current = t.bracket.filter((b) => b.round === maxRound);
@@ -478,6 +580,14 @@ function tryAdvanceRounds(state, t) {
     t.status = "finished";
     t.winnerId = winners[0];
     t.updatedAt = Date.now();
+    if (ctx.achievements && t.winnerId) {
+      recordGameEvent(
+        ctx.achievements,
+        t.winnerId,
+        { tournamentWin: true },
+        achHooks(ctx) || {}
+      );
+    }
     return;
   }
   if (winners.length < 2) return;
@@ -516,11 +626,9 @@ function tryAdvanceRounds(state, t) {
     }
   }
   t.updatedAt = Date.now();
-  // recurse if only byes
-  tryAdvanceRounds(state, t);
+  tryAdvanceRounds(state, t, ctx);
 }
 
-/** Pay tournament prize in YC (optional currency state). */
 export function payoutTournamentPrize(state, currencyState, tournamentId) {
   const t = state.tournaments.find((x) => x.id === tournamentId);
   if (!t) return { ok: false, reason: "not_found" };
@@ -555,7 +663,11 @@ export function leaderboard(state, gameId, { limit = 10 } = {}) {
 }
 
 export function summarizeGames(state) {
-  const active = state.matches.filter((m) => m.status === "active" || m.status === "waiting").length;
-  const openT = state.tournaments.filter((t) => t.status === "open" || t.status === "running").length;
+  const active = state.matches.filter(
+    (m) => m.status === "active" || m.status === "waiting"
+  ).length;
+  const openT = state.tournaments.filter(
+    (t) => t.status === "open" || t.status === "running"
+  ).length;
   return `${active} matches · ${openT} tournaments · ${GAME_IDS.length} games`;
 }
