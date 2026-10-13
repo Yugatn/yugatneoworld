@@ -27,6 +27,8 @@ import { createGamesState } from "./games.js";
 import { createSocialState } from "./social.js";
 import { createNotificationsState } from "./notifications.js";
 import { createMessengerState } from "./messenger.js";
+import { createAchievementsState } from "./achievements.js";
+import { createFeedState } from "./feed.js";
 
 const KEY = "yugatn-eworld-v0.1";
 
@@ -83,6 +85,8 @@ function ensureLife(data) {
   data.social = createSocialState(data.social || {});
   data.notifications = createNotificationsState(data.notifications || {});
   data.messenger = createMessengerState(data.messenger || {});
+  data.achievements = createAchievementsState(data.achievements || {});
+  data.feed = createFeedState(data.feed || {});
   return data;
 }
 
@@ -121,6 +125,8 @@ function fillDefaults(fresh) {
   if (!fresh.social) fresh.social = createSocialState();
   if (!fresh.notifications) fresh.notifications = createNotificationsState();
   if (!fresh.messenger) fresh.messenger = createMessengerState();
+  if (!fresh.achievements) fresh.achievements = createAchievementsState();
+  if (!fresh.feed) fresh.feed = createFeedState();
   return fresh;
 }
 
@@ -192,6 +198,8 @@ export function loadWorld(fallback = createDefaultWorld()) {
       if (data.social) fresh.social = createSocialState(data.social);
       if (data.notifications) fresh.notifications = createNotificationsState(data.notifications);
       if (data.messenger) fresh.messenger = createMessengerState(data.messenger);
+      if (data.achievements) fresh.achievements = createAchievementsState(data.achievements);
+      if (data.feed) fresh.feed = createFeedState(data.feed);
       return fresh;
     }
     if (!data.apartment) data.apartment = structuredClone(fallback.apartment);
