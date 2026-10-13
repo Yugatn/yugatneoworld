@@ -3,7 +3,9 @@ import {
   createAchievementsState,
   unlockAchievement,
   bumpProgress,
+  recordGameEvent,
   listUserAchievements,
+  listGameAchievements,
   totalPoints,
   summarizeAchievements,
   ACHIEVEMENT_DEFS
@@ -29,7 +31,8 @@ assert.ok(WORLD_VERSION >= 25);
 const world = createDefaultWorld();
 assert.ok(world.achievements);
 assert.ok(world.feed);
-assert.ok(ACHIEVEMENT_DEFS.length >= 10);
+assert.ok(ACHIEVEMENT_DEFS.length >= 20);
+assert.ok(listGameAchievements().length >= 15);
 
 const ach = createAchievementsState();
 const notif = createNotificationsState();
@@ -45,15 +48,55 @@ assert.equal(u.ok, true);
 assert.ok(getBalance(cur, "alice") >= 5);
 assert.ok(unreadCount(notif, "alice") >= 1);
 
-const bump = bumpProgress(ach, "alice", "matches", 1, {
-  notifyState: notif,
-  currencyState: cur
-});
-assert.ok(bump.unlocked.includes("first_match"));
+// —— Game achievements ——
+const chess = recordGameEvent(
+  ach,
+  "alice",
+  { gameId: "chess", result: "win", rated: true },
+  { notifyState: notif, currencyState: cur }
+);
+assert.ok(chess.unlocked.includes("first_match"));
+assert.ok(chess.unlocked.includes("chess_win"));
+assert.ok(chess.unlocked.includes("rated_win"));
 
-assert.ok(totalPoints(ach, "alice") >= 25);
-assert.ok(listUserAchievements(ach, "alice").some((a) => a.unlocked));
-assert.ok(summarizeAchievements(ach, "alice").includes("badges"));
+recordGameEvent(ach, "alice", { gameId: "checkers", result: "win" }, { currencyState: cur });
+assert.ok(
+  listUserAchievements(ach, "alice").find((a) => a.id === "checkers_win").unlocked
+);
+
+recordGameEvent(ach, "alice", { gameId: "monopoly", result: "play" }, { currencyState: cur });
+assert.ok(
+  listUserAchievements(ach, "alice").find((a) => a.id === "monopoly_play").unlocked
+);
+recordGameEvent(ach, "alice", { gameId: "monopoly", result: "win" }, { currencyState: cur });
+assert.ok(
+  listUserAchievements(ach, "alice").find((a) => a.id === "monopoly_win").unlocked
+);
+
+recordGameEvent(ach, "alice", { gameId: "tictactoe", result: "win" }, { currencyState: cur });
+recordGameEvent(ach, "alice", { gameId: "reversi", result: "win" }, { currencyState: cur });
+assert.ok(
+  listUserAchievements(ach, "alice").find((a) => a.id === "polyglot_gamer").unlocked,
+  "all 5 games played"
+);
+
+recordGameEvent(ach, "alice", { tournamentJoin: true }, { currencyState: cur });
+recordGameEvent(ach, "alice", { tournamentHost: true }, { currencyState: cur });
+recordGameEvent(ach, "alice", { tournamentWin: true }, { currencyState: cur });
+assert.ok(
+  listUserAchievements(ach, "alice").find((a) => a.id === "tournament_champ").unlocked
+);
+
+// volume thresholds
+for (let i = 0; i < 8; i++) {
+  recordGameEvent(ach, "bob", { gameId: "chess", result: "win" }, {});
+}
+const bob = listUserAchievements(ach, "bob");
+assert.ok(bob.find((a) => a.id === "wins_5").unlocked);
+assert.ok(bob.find((a) => a.id === "chess_wins_5").unlocked);
+
+assert.ok(totalPoints(ach, "alice") > 100);
+assert.ok(summarizeAchievements(ach, "alice").includes("games"));
 
 const feed = createFeedState();
 const post = createPost(feed, {
