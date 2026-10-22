@@ -1,7 +1,7 @@
 /** Pure administrative commands; caller must authenticate and authorize the actor. No public HTTP write routes. */
 import {randomUUID} from "node:crypto";
 import {validateSnapshot} from "./labor-store.js";
-const roles=["organization_admin","recruiter"];
+const roles=["organization_admin","recruiter","sole_proprietor_owner"];
 function required(s,min=1,max=160){return typeof s==="string"&&s.trim().length>=min&&s.length<=max}
 export function applyLaborCommand(snapshot,actor,command){
  validateSnapshot(snapshot);
@@ -9,6 +9,7 @@ export function applyLaborCommand(snapshot,actor,command){
  if(!command||!["vacancy.create","vacancy.update","vacancy.close"].includes(command.type))throw Error("unsupported_command");
  const organization=snapshot.organizations.find(o=>o.id===actor.organizationId);
  if(!organization||organization.status!=="verified")throw Error("organization_not_verified");
+ if(actor.role==="sole_proprietor_owner" && organization.kind!=="sole_proprietor")throw Error("role_employer_mismatch");
  const vacancies=snapshot.vacancies.map(v=>({...v}));
  if(command.type==="vacancy.create"){
   const v=command.vacancy;
