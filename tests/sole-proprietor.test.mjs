@@ -1,0 +1,16 @@
+import assert from "node:assert/strict";
+import {validateSnapshot,publicVacancies} from "../server/labor-store.js";
+import {applyLaborCommand} from "../server/labor-admin.js";
+const ip={id:"ip123",kind:"sole_proprietor",registrationId:"123456789012345",name:"ИП Тестовый",status:"verified"};
+const snapshot={version:1,organizations:[ip,{id:"corp1",kind:"legal_entity",name:"Компания",status:"verified"}],vacancies:[]};
+assert.equal(validateSnapshot(snapshot),snapshot);
+const owner={id:"owner1",organizationId:"ip123",role:"sole_proprietor_owner",active:true};
+const create={type:"vacancy.create",vacancy:{organizationId:"ip123",title:"Бухгалтер",description:"Подготовка отчётности и работа в Excel и 1С",location:"Удалённо"}};
+const draft=applyLaborCommand(snapshot,owner,create);
+assert.equal(draft.snapshot.vacancies[0].status,"draft");
+const open=applyLaborCommand(draft.snapshot,owner,{type:"vacancy.update",vacancyId:draft.event.recordId,patch:{status:"open"}});
+assert.equal(publicVacancies(open.snapshot)[0].employerKind,"sole_proprietor");
+assert.throws(()=>applyLaborCommand(snapshot,{...owner,organizationId:"corp1"}, {...create,vacancy:{...create.vacancy,organizationId:"corp1"}}),/role_employer_mismatch/);
+assert.throws(()=>validateSnapshot({...snapshot,organizations:[{...ip,registrationId:"x"}]}),/invalid_records/);
+assert.equal(publicVacancies({...open.snapshot,organizations:[{...ip,status:"suspended"},snapshot.organizations[1]]}).length,0);
+console.log("sole proprietor tests passed");
