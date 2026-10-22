@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import { validateVacancy, calculateReputation, searchVacancies } from "../src/domain-ts/labor.js";
+const vacancy = {id:"v1", organizationId:"org1", title:"Designer", description:"Create accessible educational experiences", location:"Remote", status:"open"};
+assert.deepEqual(validateVacancy(vacancy), []);
+assert.equal(searchVacancies([vacancy], "designer").length, 1);
+assert.equal(searchVacancies([vacancy], "engineer").length, 0);
+assert.ok(validateVacancy({...vacancy, salaryMin:100, salaryMax:50}).includes("salary_range"));
+const reviews = Array.from({length: 5}, (_,i) => ({id:String(i),engagementId:String(i),authorId:"a"+i,subjectId:"org1",dimension:"payment",rating:5,verified:true}));
+assert.equal(calculateReputation(reviews,"org1","payment").average,5);
+assert.equal(calculateReputation(reviews.slice(0,4),"org1","payment").average,null);
+assert.equal(calculateReputation([...reviews, {...reviews[0],id:"duplicate"}],"org1","payment").sampleSize,5);
+assert.equal(calculateReputation(reviews.map(r=>({...r,disputed:true})),"org1","payment").average,null);
+console.log("labor domain tests passed");
