@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { WebSocketServer } from "ws";
 import { SECURITY_HEADERS } from "../src/domain/security.js";
+import { handleLaborApi } from "./labor-api.js";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const port = Number(process.env.PORT || 8080);
@@ -210,6 +211,8 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify({ ok: true, service: "yugatn-eworld" }));
     return;
   }
+
+  if (handleLaborApi(req, res, requestPath, responseHeaders())) return;
 
   if (method !== "GET" && method !== "HEAD") {
     res.writeHead(405, responseHeaders({ Allow: "GET, HEAD" }));
