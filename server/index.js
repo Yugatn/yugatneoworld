@@ -212,7 +212,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (handleLaborApi(req, res, requestPath, responseHeaders())) return;
+  if (await handleLaborApi(req, res, requestPath, responseHeaders())) return;
 
   if (method !== "GET" && method !== "HEAD") {
     res.writeHead(405, responseHeaders({ Allow: "GET, HEAD" }));
