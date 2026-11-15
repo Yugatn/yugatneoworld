@@ -31,8 +31,8 @@ export function nearbyPlaces(state, x, y, r = 180) {
 /**
  * Street layout: services always; cinema if tier allows; open friend doors as visit targets.
  */
-export function buildStreetPlaces(city, social) {
-  const tier = getStreetTier(social);
+export function buildStreetPlaces(city, social, userId = "local") {
+  const tier = getStreetTier(social, userId);
   const places = city.places
     .filter((p) => {
       if (p.type === "cinema") return tier.features.includes("cinema") || tier.features.includes("premiere");
@@ -41,7 +41,7 @@ export function buildStreetPlaces(city, social) {
     .map((p) => ({ ...p }));
 
   if (tier.features.includes("visits")) {
-    listVisitableFriends(social).forEach((f, i) => {
+    listVisitableFriends(social, userId).forEach((f, i) => {
       places.push({
         id: "friend-door-" + f.subjectId,
         type: "friend_door",
