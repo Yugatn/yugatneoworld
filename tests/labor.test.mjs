@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { validateVacancy, calculateReputation, searchVacancies } from "../src/domain-ts/labor.js";
+import { validateVacancy, calculateReputation, searchVacancies } from "../src/domain/labor.js";
 const vacancy = {id:"v1", organizationId:"org1", title:"Designer", description:"Create accessible educational experiences", location:"Remote", status:"open"};
 assert.deepEqual(validateVacancy(vacancy), []);
 assert.equal(searchVacancies([vacancy], "designer").length, 1);
