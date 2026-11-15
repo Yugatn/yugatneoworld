@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { generateKeyPairSync } from "node:crypto";
-import { validateAttestation, skillStatus, skillSummary } from "../src/domain-ts/skill-verification.js";
+import { validateAttestation, skillStatus, skillSummary } from "../src/domain/skill-verification.js";
 import { digestEvidence, signAttestation, verifyAttestationSignature } from "../server/skill-crypto.js";
 const hash = digestEvidence("redacted-evidence");
 const base = { id:"a1", employeeId:"employee", organizationId:"company", skillId:"excel", issuerId:"director", issuerRole:"director", issuerAuthorized:true, employment:{source:"employer_record",referenceHash:hash,verified:true,employeeId:"employee",organizationId:"company",startDate:"2023-01-01"},evidence:[{kind:"task_record",referenceHash:hash,verified:true}],issuedAt:"2025-01-01",reviewDueAt:"2027-01-01",signatureVerified:true };
