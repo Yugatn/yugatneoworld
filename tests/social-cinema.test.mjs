@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import {
-  createSocialState, addFriend, getStreetTier, listVisitableFriends,
-  canVisitFriend, streetHasFeature, spendCredits, updateFriendPresence
+  createSocialState, sendFriendRequest, acceptFriendRequest,
+  getStreetTier, listVisitableFriends, canVisitFriend,
+  streetHasFeature, setPresence
 } from "../src/domain/social.js";
 import {
   createCinemaState, contribute, poolProgress, suggestedContribution,
-  coWatchBenefits, selectFilm, endScreening, CINEMA_POOL_TARGET
+  coWatchBenefits, selectFilm, endScreening
 } from "../src/domain/cinema.js";
 import { createApartment, setDoorOpen, canAcceptVisit, isDoorOpen } from "../src/domain/apartment.js";
 import { createCityState, buildStreetPlaces } from "../src/domain/city.js";
@@ -22,22 +23,33 @@ assert.equal(getStreetTier(social).id, "quiet");
 assert.equal(streetHasFeature(social, "visits"), false);
 assert.equal(streetHasFeature(social, "cinema"), false);
 
-addFriend(social, { subjectId: "u_a", displayName: "Alice", doorOpen: true });
+function addConfirmedFriend(id, displayName, doorOpen) {
+  const request = sendFriendRequest(social, "local", id);
+  assert.equal(request.ok, true);
+  const accepted = acceptFriendRequest(social, request.request.id, id);
+  assert.equal(accepted.ok, true);
+  setPresence(social, id, { status: "online", roomId: "livingRoom", displayName, doorOpen });
+}
+
+addConfirmedFriend("u_a", "Alice", true);
 assert.equal(getStreetTier(social).id, "neighbors");
 assert.ok(streetHasFeature(social, "visits"));
 assert.equal(listVisitableFriends(social).length, 1);
 assert.equal(canVisitFriend(social, "u_a"), true);
 
-updateFriendPresence(social, "u_a", { doorOpen: false });
+setPresence(social, "u_a", { status: "online", doorOpen: false });
 assert.equal(canVisitFriend(social, "u_a"), false);
-updateFriendPresence(social, "u_a", { doorOpen: true });
+setPresence(social, "u_a", { status: "online", doorOpen: true });
 
-addFriend(social, { subjectId: "u_b", displayName: "Bob", doorOpen: true });
-addFriend(social, { subjectId: "u_c", displayName: "Cara", doorOpen: false });
+addConfirmedFriend("u_b", "Bob", true);
+addConfirmedFriend("u_c", "Cara", false);
 assert.equal(getStreetTier(social).id, "friends");
 assert.ok(streetHasFeature(social, "cinema"));
+assert.equal(canVisitFriend(social, "u_c"), false);
 
-for (let i = 0; i < 4; i++) addFriend(social, { subjectId: "u_x" + i, displayName: "F" + i, doorOpen: true });
+for (let i = 0; i < 4; i++) {
+  addConfirmedFriend("u_x" + i, "F" + i, true);
+}
 assert.equal(getStreetTier(social).id, "boulevard");
 assert.ok(streetHasFeature(social, "premiere"));
 
@@ -45,6 +57,7 @@ const city = createCityState();
 const { places, tier } = buildStreetPlaces(city, social);
 assert.ok(places.some((p) => p.type === "cinema"));
 assert.ok(places.some((p) => p.type === "friend_door"));
+assert.ok(!places.some((p) => p.subjectId === "u_c"));
 assert.equal(tier.id, "boulevard");
 
 const cinema = createCinemaState();
@@ -67,9 +80,5 @@ assert.ok(coWatchBenefits(3, true).includes("friend discount"));
 endScreening(cinema);
 assert.equal(cinema.active, false);
 assert.ok(selectFilm(cinema, "classic-orbit"));
-
-assert.equal(spendCredits(social, 5), true);
-assert.equal(social.credits, 15);
-assert.equal(spendCredits(social, 100), false);
 
 console.log("social-cinema tests OK");
