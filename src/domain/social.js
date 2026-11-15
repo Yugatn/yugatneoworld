@@ -24,7 +24,8 @@ export function createSocialState(seed = {}) {
     requests: Array.isArray(seed.requests) ? seed.requests.map((r) => ({ ...r })) : [],
     invites: Array.isArray(seed.invites) ? seed.invites.map((i) => ({ ...i })) : [],
     /** userId → { status, roomId, lastSeenAt, displayName } */
-    presence: seed.presence && typeof seed.presence === "object" ? { ...seed.presence } : {}
+    presence: seed.presence && typeof seed.presence === "object" ? { ...seed.presence } : {},
+    credits: Number.isSafeInteger(seed.credits) && seed.credits >= 0 ? seed.credits : 20
   };
 }
 
@@ -282,18 +283,18 @@ export function listPendingFriendRequests(state, userId) {
 export function getStreetTier(state, userId = "local") {
   const count = listFriends(state, userId).length;
   if (count >= 6) {
-    return { id: "social-boulevard", label: "Social boulevard", friendCount: count,
+    return { id: "boulevard", label: "Social boulevard", friendCount: count,
       features: ["services", "visits", "cinema", "premiere"] };
   }
   if (count >= 3) {
-    return { id: "friends-avenue", label: "Friends avenue", friendCount: count,
+    return { id: "friends", label: "Friends avenue", friendCount: count,
       features: ["services", "visits", "cinema"] };
   }
   if (count >= 1) {
-    return { id: "neighbors-street", label: "Neighbors street", friendCount: count,
+    return { id: "neighbors", label: "Neighbors street", friendCount: count,
       features: ["services", "visits"] };
   }
-  return { id: "quiet-lane", label: "Quiet lane", friendCount: 0, features: ["services"] };
+  return { id: "quiet", label: "Quiet lane", friendCount: 0, features: ["services"] };
 }
 
 /**
@@ -312,6 +313,56 @@ export function listVisitableFriends(state, userId = "local") {
       roomId: presence.roomId || null
     }];
   });
+}
+
+/**
+ * Local prototype helper. It only edits the in-browser demonstration graph;
+ * authoritative friendships and visit consent must come from the server.
+ */
+export function addFriend(state, { subjectId, displayName = null, doorOpen = false } = {}) {
+  const id = String(subjectId ?? "").trim();
+  if (!id || id === "local") return { ok: false, reason: "invalid_subject" };
+  if (!areFriends(state, "local", id)) {
+    if (listFriends(state, "local").length >= MAX_FRIENDS) {
+      return { ok: false, reason: "friends_full" };
+    }
+    const key = pairKey("local", id);
+    const [a, b] = key.split("|");
+    state.friendships.push({ key, a, b, since: Date.now() });
+  }
+  setPresence(state, id, { status: "online", displayName: displayName || id, doorOpen });
+  return { ok: true, subjectId: id };
+}
+
+export function updateFriendPresence(state, subjectId, patch = {}) {
+  if (!areFriends(state, "local", subjectId)) {
+    return { ok: false, reason: "not_friends" };
+  }
+  const previous = getPresence(state, subjectId);
+  return setPresence(state, subjectId, {
+    status: patch.status ?? previous.status,
+    roomId: patch.roomId ?? previous.roomId,
+    displayName: patch.displayName ?? previous.displayName,
+    doorOpen: patch.doorOpen ?? previous.doorOpen
+  });
+}
+
+export function canVisitFriend(state, subjectId, userId = "local") {
+  return areFriends(state, userId, subjectId)
+    && listVisitableFriends(state, userId).some((friend) => friend.subjectId === String(subjectId));
+}
+
+export function streetHasFeature(state, feature, userId = "local") {
+  return getStreetTier(state, userId).features.includes(String(feature));
+}
+
+export function spendCredits(state, amount) {
+  if (!Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(state.credits)) {
+    return false;
+  }
+  if (state.credits < amount) return false;
+  state.credits -= amount;
+  return true;
 }
 
 export function summarizeSocial(state, userId = "local") {
