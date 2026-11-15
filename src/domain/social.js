@@ -140,7 +140,8 @@ export function removeFriend(state, userId, otherId) {
 export function setPresence(state, userId, {
   status = "online",
   roomId = null,
-  displayName = null
+  displayName = null,
+  doorOpen = undefined
 } = {}) {
   const id = String(userId);
   const st = PRESENCE.includes(status) ? status : "online";
@@ -150,7 +151,9 @@ export function setPresence(state, userId, {
     displayName: displayName
       ? sanitizeText(displayName, { maxLen: 40 })
       : state.presence[id]?.displayName || id,
-    lastSeenAt: Date.now()
+    lastSeenAt: Date.now(),
+    // Local UI hint only. Access control must be enforced by the host/server.
+    doorOpen: doorOpen === undefined ? state.presence[id]?.doorOpen === true : doorOpen === true
   };
   return { ok: true, presence: { ...state.presence[id] } };
 }
@@ -275,4 +278,35 @@ export function summarizeSocial(state, userId = "local") {
   const req = listPendingFriendRequests(state, userId).length;
   const inv = listInvites(state, userId).length;
   return `${friends} friends · ${req} requests · ${inv} invites`;
+}
+
+
+/**
+ * Public-facing street projection of the accepted local friendship graph.
+ * Tiers are UI affordances, NOT authority or permission to access a room.
+ */
+export function getStreetTier(state, viewerId = "local") {
+  const count = listFriends(state, viewerId).length;
+  if (count >= 7) return { id: "boulevard", features: ["visits", "cinema", "premiere"] };
+  if (count >= 3) return { id: "friends", features: ["visits", "cinema"] };
+  if (count >= 1) return { id: "neighbors", features: ["visits"] };
+  return { id: "quiet", features: [] };
+}
+
+export function streetHasFeature(state, feature, viewerId = "local") {
+  return getStreetTier(state, viewerId).features.includes(feature);
+}
+
+/**
+ * Explicit opt-in visibility: friend relation + online presence + open door.
+ * This is a client-side listing, never an authorization for actual entry.
+ */
+export function listVisitableFriends(state, viewerId = "local") {
+  return listFriends(state, viewerId)
+    .map((subjectId) => ({ subjectId, ...getPresence(state, subjectId) }))
+    .filter((person) => person.status === "online" && person.doorOpen === true);
+}
+
+export function canVisitFriend(state, friendId, viewerId = "local") {
+  return listVisitableFriends(state, viewerId).some((person) => person.subjectId === friendId);
 }
