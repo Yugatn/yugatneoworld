@@ -140,7 +140,8 @@ export function removeFriend(state, userId, otherId) {
 export function setPresence(state, userId, {
   status = "online",
   roomId = null,
-  displayName = null
+  displayName = null,
+  doorOpen = undefined
 } = {}) {
   const id = String(userId);
   const st = PRESENCE.includes(status) ? status : "online";
@@ -150,7 +151,10 @@ export function setPresence(state, userId, {
     displayName: displayName
       ? sanitizeText(displayName, { maxLen: 40 })
       : state.presence[id]?.displayName || id,
-    lastSeenAt: Date.now()
+    lastSeenAt: Date.now(),
+    doorOpen: typeof doorOpen === "boolean"
+      ? doorOpen
+      : Boolean(state.presence[id]?.doorOpen)
   };
   return { ok: true, presence: { ...state.presence[id] } };
 }
@@ -268,6 +272,46 @@ export function listPendingFriendRequests(state, userId) {
   return state.requests
     .filter((r) => r.toId === id && r.status === "pending")
     .map((r) => ({ ...r }));
+}
+
+
+/**
+ * Street progression is a visual feature flag, not an authorization decision.
+ * The server must independently verify access to every visit or screening.
+ */
+export function getStreetTier(state, userId = "local") {
+  const count = listFriends(state, userId).length;
+  if (count >= 6) {
+    return { id: "social-boulevard", label: "Social boulevard", friendCount: count,
+      features: ["services", "visits", "cinema", "premiere"] };
+  }
+  if (count >= 3) {
+    return { id: "friends-avenue", label: "Friends avenue", friendCount: count,
+      features: ["services", "visits", "cinema"] };
+  }
+  if (count >= 1) {
+    return { id: "neighbors-street", label: "Neighbors street", friendCount: count,
+      features: ["services", "visits"] };
+  }
+  return { id: "quiet-lane", label: "Quiet lane", friendCount: 0, features: ["services"] };
+}
+
+/**
+ * Display only friends whose doors were explicitly opened. A displayed door
+ * never grants entry: the authoritative server must recheck consent.
+ */
+export function listVisitableFriends(state, userId = "local") {
+  return listFriends(state, userId).flatMap((subjectId) => {
+    const presence = state.presence?.[subjectId];
+    if (!presence || presence.doorOpen !== true || presence.status === "offline") {
+      return [];
+    }
+    return [{
+      subjectId,
+      displayName: presence.displayName || subjectId,
+      roomId: presence.roomId || null
+    }];
+  });
 }
 
 export function summarizeSocial(state, userId = "local") {
